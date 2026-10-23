@@ -52,7 +52,7 @@ DWORD WINAPI InitThread(LPVOID) {
     }
 
     for (;;) {
-        Sleep(1000);
+        Sleep(250);
         mgsvspeed::SpeedTick();
     }
 }

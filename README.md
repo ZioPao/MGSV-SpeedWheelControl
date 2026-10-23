@@ -5,18 +5,35 @@ Dynamic on-foot movement speed for **Metal Gear Solid V: The Phantom Pain** (1.0
 - **Wheel up** = faster, **wheel down** = slower.
 - **Top speed is vanilla keyboard run** (the plugin never makes you faster than normal).
 - Works in all stances (stand / squat / crawl), on foot only. Vehicles and cutscenes are untouched.
-- Logs only — no overlay, no HUD.
+- **Knobs live in Infinite Heaven's menu** (F3 → *MGSV Speed*).
 
 ## Requirements
 
 - MGSV:TPP 1.0.15.4 (Steam, EN)
 - [IHHook](https://github.com/kapuragu/IHHook) with `enable_dll_loader=true` in `ihhook_config.lua`
+- [Infinite Heaven](https://www.nexusmods.com/metalgearsolidvtpp/mods/45) (for the in-game knobs)
 
 ## Install
 
 1. Copy `MGSVSpeed.dll` into `MGS_TPP/plugins/`.
-2. Launch the game. On first run the plugin writes `MGSVSpeed.ini` next to the DLL and creates `MGSVSpeed.log`.
-3. In gameplay, scroll the mouse wheel.
+2. Copy `MGSVSpeed_Core.lua` into `MGS_TPP/mod/modules/`.
+3. Launch the game. On first run the plugin writes `MGSVSpeed.ini` next to the DLL and creates `MGSVSpeed.log`.
+4. In gameplay, scroll the mouse wheel, or open the IH menu (F3) → **MGSV Speed**.
+
+`.\build.ps1 -Deploy` does steps 1–2 for you.
+
+## In-game knobs (IH menu)
+
+F3 → **MGSV Speed**:
+
+| Knob | Meaning |
+|---|---|
+| Speed system | master switch (same as F7) |
+| Speed level | 1–8; 8 = vanilla run, lower = slower |
+| Transition smoothing | gait blend time when changing level (0–0.5 s) |
+| Invert wheel | wheel up = slower |
+
+The menu writes the values to `plugins/MGSVSpeed.runtime`; the DLL polls that file every 250 ms, so changes apply instantly without restarting. F7/F8 also write the file so the menu stays in sync.
 
 ## Controls
 
@@ -30,6 +47,8 @@ Dynamic on-foot movement speed for **Metal Gear Solid V: The Phantom Pain** (1.0
 The wheel is ignored while the game is not focused or while a menu shows the cursor.
 
 ## Config (`MGSVSpeed.ini`)
+
+The INI provides defaults. Once Infinite Heaven writes `MGSVSpeed.runtime`, the menu values take over.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -63,12 +82,20 @@ Detailed reverse-engineering notes (RVAs, offsets, speed curve) are in [`docs/MG
 
 Requires CMake ≥ 3.20 and MSVC (VS 2022/2026, x64).
 
+MinHook is a git submodule (`third_party/MinHook`). Initialize it first:
+
 ```powershell
-.\build.ps1            # configure + build
-.\build.ps1 -Deploy    # build and copy to the game's plugins folder
+git submodule update --init --recursive
 ```
 
-Output: `build/Release/MGSVSpeed.dll`.
+Then:
+
+```powershell
+.\build.ps1            # configure + build (also inits the submodule)
+.\build.ps1 -Deploy    # build, copy the DLL and the IH module into the game
+```
+
+Output: `build/Release/MGSVSpeed.dll`, source for the IH module: `lua/MGSVSpeed_Core.lua`.
 
 ## Notes
 

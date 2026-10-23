@@ -7,6 +7,12 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# MinHook is a git submodule; make sure it is present before configuring.
+if (Test-Path (Join-Path $root ".gitmodules")) {
+    git -C $root submodule update --init --recursive
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
 cmake -S "$root\src\MGSVSpeed" -B "$root\build" -G $Generator -A x64
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -20,5 +26,14 @@ if ($Deploy) {
     $plugins = Join-Path $GameDir "plugins"
     if (-not (Test-Path $plugins)) { throw "plugins folder not found: $plugins" }
     Copy-Item $dll (Join-Path $plugins "MGSVSpeed.dll") -Force
-    Write-Host "deployed to $plugins"
+    Write-Host "deployed DLL to $plugins"
+
+    $luaSrc = Join-Path $root "lua\MGSVSpeed_Core.lua"
+    $luaDst = Join-Path $GameDir "mod\modules\MGSVSpeed_Core.lua"
+    if (Test-Path $luaSrc) {
+        $luaDir = Split-Path -Parent $luaDst
+        if (-not (Test-Path $luaDir)) { throw "Infinite Heaven modules folder not found: $luaDir" }
+        Copy-Item $luaSrc $luaDst -Force
+        Write-Host "deployed IH module to $luaDst"
+    }
 }

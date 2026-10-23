@@ -25,6 +25,9 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <string>
 
 namespace mgsvspeed {
 
@@ -234,6 +237,72 @@ void UpdateSmoothing(double now) {
     if (std::fabs(g_currentMul - g_targetMul) < 0.001f) g_currentMul = g_targetMul;
 }
 
+void WriteRuntimeFile() {
+    const std::string path = g_dllDir + "\\MGSVSpeed.runtime";
+    FILE* f = nullptr;
+    if (fopen_s(&f, path.c_str(), "w") != 0 || !f) return;
+    fprintf(f, "enabled=%d\n", g_cfg.enabled ? 1 : 0);
+    fprintf(f, "level=%d\n", g_level + 1);
+    fprintf(f, "smooth=%.3f\n", g_cfg.smoothSeconds);
+    fprintf(f, "invert=%d\n", g_cfg.invertWheel ? 1 : 0);
+    fclose(f);
+}
+
+// The Infinite Heaven module MGSVSpeed_Core writes this file whenever a knob
+// changes; we mirror it into the live state. The DLL never writes it except when
+// the F7/F8 hotkeys change something, so the menu can pick that up too.
+void PollRuntimeFile() {
+    const std::string path = g_dllDir + "\\MGSVSpeed.runtime";
+    FILE* f = nullptr;
+    if (fopen_s(&f, path.c_str(), "r") != 0 || !f) return;
+
+    int   enabled = -1;
+    int   level = -1;
+    int   invert = -1;
+    float smooth = -1.0f;
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        char* eq = strchr(line, '=');
+        if (!eq) continue;
+        *eq = 0;
+        char* key = line;
+        char* val = eq + 1;
+        while (*key == ' ' || *key == '\t') ++key;
+        char* keyEnd = key + strlen(key);
+        while (keyEnd > key && (keyEnd[-1] == ' ' || keyEnd[-1] == '\t')) *--keyEnd = 0;
+        while (*val == ' ' || *val == '\t') ++val;
+
+        if      (_stricmp(key, "enabled") == 0) enabled = atoi(val);
+        else if (_stricmp(key, "level") == 0)   level = atoi(val);
+        else if (_stricmp(key, "smooth") == 0)  smooth = (float)atof(val);
+        else if (_stricmp(key, "invert") == 0)  invert = atoi(val);
+    }
+    fclose(f);
+
+    if (enabled >= 0) {
+        const bool e = enabled != 0;
+        if (e != g_cfg.enabled) {
+            g_cfg.enabled = e;
+            if (!e) g_currentMul = 1.0f;
+            LogInfo("IH menu: system %s", e ? "ENABLED" : "DISABLED");
+        }
+    }
+    if (level >= 1) {
+        SetLevel(level - 1, "IH menu");
+    }
+    if (smooth >= 0.0f && std::fabs(smooth - g_cfg.smoothSeconds) > 0.0005f) {
+        g_cfg.smoothSeconds = smooth;
+        LogInfo("IH menu: smooth %.3f s", smooth);
+    }
+    if (invert >= 0) {
+        const bool i = invert != 0;
+        if (i != g_cfg.invertWheel) {
+            g_cfg.invertWheel = i;
+            LogInfo("IH menu: invert %s", i ? "ON" : "OFF");
+        }
+    }
+}
+
 void CheckHotkeys() {
     if (!g_cfg.hotkeyEnabled) return;
     static bool lastF7 = false;
@@ -243,6 +312,7 @@ void CheckHotkeys() {
     if (f7 && !lastF7) {
         g_cfg.enabled = !g_cfg.enabled;
         if (!g_cfg.enabled) g_currentMul = 1.0f;
+        WriteRuntimeFile();
         LogInfo("hotkey F7: system %s", g_cfg.enabled ? "ENABLED" : "DISABLED");
     }
     lastF7 = f7;
@@ -250,6 +320,7 @@ void CheckHotkeys() {
     const bool f8 = (GetAsyncKeyState(VK_F8) & 0x8000) != 0;
     if (f8 && !lastF8) {
         SetLevel((int)g_cfg.levels.size() - 1, "hotkey F8 (reset)");
+        WriteRuntimeFile();
         LogInfo("hotkey F8: level reset to top speed");
     }
     lastF8 = f8;
@@ -497,6 +568,8 @@ bool InstallSpeedHook() {
 }
 
 void SpeedTick() {
+    PollRuntimeFile();
+
     const double now = NowSeconds();
     if (g_cfg.heartbeatSeconds <= 0) return;
     if (now - g_lastHeartbeat < (double)g_cfg.heartbeatSeconds) return;

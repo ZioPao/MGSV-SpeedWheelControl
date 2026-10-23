@@ -13,16 +13,17 @@ add_library(MGSVSpeed SHARED
     logger.cpp
     common.cpp
     scanner.cpp
-    ${MINHOOK_DIR}/hook.c
-    ${MINHOOK_DIR}/buffer.c
-    ${MINHOOK_DIR}/trampoline.c
-    ${MINHOOK_DIR}/hde/hde64.c
+    ${MINHOOK_DIR}/src/hook.c
+    ${MINHOOK_DIR}/src/buffer.c
+    ${MINHOOK_DIR}/src/trampoline.c
+    ${MINHOOK_DIR}/src/hde/hde64.c
 )
 
 target_include_directories(MGSVSpeed PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${MINHOOK_DIR}
-    ${MINHOOK_DIR}/hde
+    ${MINHOOK_DIR}/include
+    ${MINHOOK_DIR}/src
+    ${MINHOOK_DIR}/src/hde
 )
 
 target_compile_definitions(MGSVSpeed PRIVATE
