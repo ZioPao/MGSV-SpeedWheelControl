@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <string>
 
-namespace mgsvspeed {
+namespace ksc {
 
 extern uintptr_t g_base;      // mgsvtpp.exe base address
 extern size_t    g_size;      // size of image in memory
@@ -13,4 +13,4 @@ bool InitModuleInfo();
 std::string GetExeVersionString();
 std::string GetGameDir();
 
-} // namespace mgsvspeed
+} // namespace ksc

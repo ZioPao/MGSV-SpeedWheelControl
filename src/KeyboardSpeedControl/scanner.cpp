@@ -3,7 +3,7 @@
 #include <cstring>
 #include <vector>
 
-namespace mgsvspeed {
+namespace ksc {
 
 namespace {
 
@@ -80,4 +80,4 @@ bool MatchPattern(uintptr_t address, const char* pattern) {
     return true;
 }
 
-} // namespace mgsvspeed
+} // namespace ksc

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace mgsvspeed {
+namespace ksc {
 
 struct Config {
     bool  enabled           = true;   // master switch (F7 toggles)
@@ -36,4 +36,4 @@ bool LoadConfig(const std::string& iniPath);
 void WriteDefaultConfigIfMissing(const std::string& iniPath);
 std::string ConfigPathFor(const std::string& dllDir);
 
-} // namespace mgsvspeed
+} // namespace ksc

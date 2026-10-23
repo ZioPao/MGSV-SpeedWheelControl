@@ -1,4 +1,4 @@
-// MGSVSpeed - dynamic on-foot movement speed for MGSV:TPP.
+// Keyboard Speed Control - dynamic on-foot movement speed for MGSV:TPP.
 //
 // The game drives both locomotion and the walk/jog/run animation blend from a
 // single analog "move force" (Work +0x2C0, range 0.1 .. 0.95). Keyboard input is
@@ -29,7 +29,7 @@
 #include <cstring>
 #include <string>
 
-namespace mgsvspeed {
+namespace ksc {
 
 namespace {
 
@@ -237,22 +237,10 @@ void UpdateSmoothing(double now) {
     if (std::fabs(g_currentMul - g_targetMul) < 0.001f) g_currentMul = g_targetMul;
 }
 
-void WriteRuntimeFile() {
-    const std::string path = g_dllDir + "\\MGSVSpeed.runtime";
-    FILE* f = nullptr;
-    if (fopen_s(&f, path.c_str(), "w") != 0 || !f) return;
-    fprintf(f, "enabled=%d\n", g_cfg.enabled ? 1 : 0);
-    fprintf(f, "level=%d\n", g_level + 1);
-    fprintf(f, "smooth=%.3f\n", g_cfg.smoothSeconds);
-    fprintf(f, "invert=%d\n", g_cfg.invertWheel ? 1 : 0);
-    fclose(f);
-}
-
-// The Infinite Heaven module MGSVSpeed_Core writes this file whenever a knob
-// changes; we mirror it into the live state. The DLL never writes it except when
-// the F7/F8 hotkeys change something, so the menu can pick that up too.
+// The Infinite Heaven module KeyboardSpeedControl_Core writes this file whenever a knob
+// changes; we mirror it into the live state. The menu is the only writer.
 void PollRuntimeFile() {
-    const std::string path = g_dllDir + "\\MGSVSpeed.runtime";
+    const std::string path = g_dllDir + "\\KeyboardSpeedControl.runtime";
     FILE* f = nullptr;
     if (fopen_s(&f, path.c_str(), "r") != 0 || !f) return;
 
@@ -312,7 +300,6 @@ void CheckHotkeys() {
     if (f7 && !lastF7) {
         g_cfg.enabled = !g_cfg.enabled;
         if (!g_cfg.enabled) g_currentMul = 1.0f;
-        WriteRuntimeFile();
         LogInfo("hotkey F7: system %s", g_cfg.enabled ? "ENABLED" : "DISABLED");
     }
     lastF7 = f7;
@@ -320,7 +307,6 @@ void CheckHotkeys() {
     const bool f8 = (GetAsyncKeyState(VK_F8) & 0x8000) != 0;
     if (f8 && !lastF8) {
         SetLevel((int)g_cfg.levels.size() - 1, "hotkey F8 (reset)");
-        WriteRuntimeFile();
         LogInfo("hotkey F8: level reset to top speed");
     }
     lastF8 = f8;
@@ -586,4 +572,4 @@ void SpeedTick() {
             (long)g_frames, (long)g_applyCount);
 }
 
-} // namespace mgsvspeed
+} // namespace ksc

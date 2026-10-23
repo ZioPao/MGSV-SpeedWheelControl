@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <string>
 
-namespace mgsvspeed {
+namespace ksc {
 
 uintptr_t   g_base = 0;
 size_t      g_size = 0;
@@ -64,4 +64,4 @@ std::string GetGameDir() {
     return Narrow(ws.substr(0, pos));
 }
 
-} // namespace mgsvspeed
+} // namespace ksc

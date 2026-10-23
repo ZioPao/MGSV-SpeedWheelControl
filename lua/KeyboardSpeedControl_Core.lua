@@ -1,17 +1,17 @@
--- MGSVSpeed_Core.lua
--- Infinite Heaven external module: adds the MGSVSpeed knobs to the IH menu (F3)
--- and publishes them to plugins/MGSVSpeed.runtime, which MGSVSpeed.dll polls.
+-- KeyboardSpeedControl_Core.lua
+-- Infinite Heaven external module: adds the Keyboard Speed Control knobs to the IH menu (F3)
+-- and publishes them to plugins/KeyboardSpeedControl.runtime, which KeyboardSpeedControl.dll polls.
 --
--- Install: copy to MGS_TPP/mod/modules/MGSVSpeed_Core.lua
+-- Install: copy to MGS_TPP/mod/modules/KeyboardSpeedControl_Core.lua
 -- IH auto-loads every .lua in that folder, so no other setup is needed.
 
 local this = {}
 
-if rawget(_G, "MGSVSpeed_Core") then
-  return _G.MGSVSpeed_Core
+if rawget(_G, "KeyboardSpeedControl_Core") then
+  return _G.KeyboardSpeedControl_Core
 end
 
-local runtimeName = "MGSVSpeed.runtime"
+local runtimeName = "KeyboardSpeedControl.runtime"
 
 local function GamePath()
   local path = (InfCore and InfCore.gamePath) or (IHH and IHH.GetGamePath and IHH.GetGamePath()) or ".\\"
@@ -40,10 +40,10 @@ end
 local function WriteRuntime()
   local f = io.open(RuntimePath(), "w")
   if not f then return end
-  f:write("enabled=" .. tostring(IvarValue("mgsvSpeed_enabled", 1)) .. "\n")
-  f:write("level=" .. tostring(IvarValue("mgsvSpeed_level", 8)) .. "\n")
-  f:write(string.format("smooth=%.3f\n", IvarValue("mgsvSpeed_smooth", 0.12)))
-  f:write("invert=" .. tostring(IvarValue("mgsvSpeed_invert", 0)) .. "\n")
+  f:write("enabled=" .. tostring(IvarValue("ksc_enabled", 1)) .. "\n")
+  f:write("level=" .. tostring(IvarValue("ksc_level", 8)) .. "\n")
+  f:write(string.format("smooth=%.3f\n", IvarValue("ksc_smooth", 0.12)))
+  f:write("invert=" .. tostring(IvarValue("ksc_invert", 0)) .. "\n")
   f:close()
 end
 
@@ -60,13 +60,13 @@ local function OnChange()
 end
 
 this.registerIvars = {
-  "mgsvSpeed_enabled",
-  "mgsvSpeed_level",
-  "mgsvSpeed_smooth",
-  "mgsvSpeed_invert",
+  "ksc_enabled",
+  "ksc_level",
+  "ksc_smooth",
+  "ksc_invert",
 }
 
-this.mgsvSpeed_enabled = {
+this.ksc_enabled = {
   description = "Speed system",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
@@ -76,10 +76,10 @@ this.mgsvSpeed_enabled = {
   OnChange = OnChange,
 }
 
--- Approximate stand-stance speed for the default level table in MGSVSpeed.ini.
+-- Approximate stand-stance speed for the default level table in KeyboardSpeedControl.ini.
 local levelSpeeds = { 1.41, 1.65, 1.90, 2.14, 3.21, 3.72, 4.23, 4.70 }
 
-this.mgsvSpeed_level = {
+this.ksc_level = {
   description = "Speed level",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
@@ -91,7 +91,7 @@ this.mgsvSpeed_level = {
   end,
 }
 
-this.mgsvSpeed_smooth = {
+this.ksc_smooth = {
   description = "Transition smoothing",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
@@ -103,7 +103,7 @@ this.mgsvSpeed_smooth = {
   end,
 }
 
-this.mgsvSpeed_invert = {
+this.ksc_invert = {
   description = "Invert wheel",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
@@ -120,22 +120,22 @@ this.mgsvSpeed_invert = {
 function this.GenerateMenus()
   if not InfMenuDefs then return end
 
-  InfMenuDefs.mgsvSpeedMenu = {
-    description = "MGSV Speed",
+  InfMenuDefs.kscMenu = {
+    description = "Keyboard Speed Control",
     options = {
-      "Ivars.mgsvSpeed_enabled",
-      "Ivars.mgsvSpeed_level",
-      "Ivars.mgsvSpeed_smooth",
-      "Ivars.mgsvSpeed_invert",
+      "Ivars.ksc_enabled",
+      "Ivars.ksc_level",
+      "Ivars.ksc_smooth",
+      "Ivars.ksc_invert",
     },
   }
 
   local function addToRoot(root)
     if not (root and root.options) then return end
     for _, ref in ipairs(root.options) do
-      if ref == "InfMenuDefs.mgsvSpeedMenu" then return end
+      if ref == "InfMenuDefs.kscMenu" then return end
     end
-    table.insert(root.options, 1, "InfMenuDefs.mgsvSpeedMenu")
+    table.insert(root.options, 1, "InfMenuDefs.kscMenu")
   end
 
   addToRoot(InfMenuDefs.inMissionMenu)
@@ -147,6 +147,6 @@ function this.PostAllModulesLoad()
   WriteRuntime()
 end
 
-_G.MGSVSpeed_Core = this
+_G.KeyboardSpeedControl_Core = this
 
 return this

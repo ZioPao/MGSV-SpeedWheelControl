@@ -7,7 +7,7 @@
 #include <share.h>
 #include <string>
 
-namespace mgsvspeed {
+namespace ksc {
 
 namespace {
 std::mutex g_mutex;
@@ -39,7 +39,7 @@ void LogInit(const std::string& filePath) {
     g_file = _fsopen(filePath.c_str(), "w", _SH_DENYNO);
     if (!g_file) fopen_s(&g_file, filePath.c_str(), "w");
     if (g_file) {
-        fprintf(g_file, "=== MGSVSpeed log (%s) ===\n", Timestamp().c_str());
+        fprintf(g_file, "=== Keyboard Speed Control log (%s) ===\n", Timestamp().c_str());
         fflush(g_file);
     }
 }
@@ -56,4 +56,4 @@ void LogWarn(const char* fmt, ...)  { va_list a; va_start(a, fmt); WriteLine("wa
 void LogError(const char* fmt, ...) { va_list a; va_start(a, fmt); WriteLine("error", fmt, a); va_end(a); }
 void LogBeat(const char* fmt, ...)  { va_list a; va_start(a, fmt); WriteLine("beat",  fmt, a); va_end(a); }
 
-} // namespace mgsvspeed
+} // namespace ksc
