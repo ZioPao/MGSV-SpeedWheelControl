@@ -54,7 +54,7 @@ The INI provides defaults. Once Infinite Heaven writes `KeyboardSpeedControl.run
 |---|---|---|
 | `enabled` | `1` | master switch |
 | `levels` | `0.10,0.23,...,1.00` | target move-speed rate per notch; `1.0` = vanilla run |
-| `defaultLevel` | `7` | starting notch (7 = top speed) |
+| `defaultLevel` | `7` | index of the starting notch (7 = top speed) |
 | `invertWheel` | `0` | `1` = wheel up slows down |
 | `smoothSeconds` | `0.12` | gait transition smoothing |
 | `forceMin` / `forceMax` | `0` | `0` = read the game's own force limits (0.1 / 0.95) |

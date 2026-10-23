@@ -197,10 +197,14 @@ void ProcessWheel(float raw) {
         }
     }
 
-    // The game's input device reports Windows wheel deltas (120 per notch) on
-    // some builds and normalized 1.0 per notch on others. Normalize by size.
-    const float unit = (std::fabs(raw) >= 10.0f) ? 120.0f : 1.0f;
-    g_wheelAccum += raw / unit;
+    // MGSV reports the wheel normalized (about +-1 per notch). Normalize only
+    // genuine Windows deltas (multiples of 120); a fast scroll arrives as one
+    // large value, which must map to that many steps, not be divided down.
+    float delta = raw;
+    if (std::fabs(delta) >= 120.0f && std::fabs(std::fmod(delta, 120.0f)) < 0.5f) {
+        delta /= 120.0f;
+    }
+    g_wheelAccum += delta;
 
     const float sign = g_cfg.invertWheel ? -1.0f : 1.0f;
     int steps = 0;
@@ -356,21 +360,6 @@ void __fastcall PadUpdateHook(void* self) {
 
     float wheel = 0.0f;
     if (!SafeRead(reinterpret_cast<uintptr_t>(self) + offsets::kPadWheel, wheel)) return;
-
-    // The pad writes the wheel delta once per frame. If a build ever reported a
-    // persistent value instead, the same non-zero value would arrive every frame;
-    // count it once and stay quiet until it changes.
-    static float  lastRaw = 0.0f;
-    static int    sameCount = 0;
-    static bool   persistent = false;
-    if (wheel != 0.0f && wheel == lastRaw) {
-        if (++sameCount >= 3) persistent = true;
-        if (persistent) return;
-    } else {
-        sameCount = 0;
-        if (wheel == 0.0f) persistent = false;
-    }
-    lastRaw = wheel;
 
     ProcessWheel(wheel);
 }
