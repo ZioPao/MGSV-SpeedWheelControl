@@ -238,18 +238,38 @@ void UpdateSmoothing(double now) {
 }
 
 // The Infinite Heaven module KeyboardSpeedControl_Core writes this file whenever a knob
-// changes; we mirror it into the live state. The menu is the only writer.
+// changes; we mirror it into the live state. The menu is the only writer, so only a
+// content change is applied: polling must not undo wheel/hotkey changes.
 void PollRuntimeFile() {
     const std::string path = g_dllDir + "\\KeyboardSpeedControl.runtime";
     FILE* f = nullptr;
     if (fopen_s(&f, path.c_str(), "r") != 0 || !f) return;
 
+    char buf[512] = {};
+    const size_t read = fread(buf, 1, sizeof(buf) - 1, f);
+    fclose(f);
+
+    static std::string lastContent;
+    std::string content(buf, read);
+    if (content == lastContent) return;
+    lastContent = content;
+
     int   enabled = -1;
     int   level = -1;
     int   invert = -1;
     float smooth = -1.0f;
-    char line[256];
-    while (fgets(line, sizeof(line), f)) {
+
+    size_t pos = 0;
+    while (pos < content.size()) {
+        size_t eol = content.find('\n', pos);
+        if (eol == std::string::npos) eol = content.size();
+
+        char line[256] = {};
+        size_t len = eol - pos;
+        if (len >= sizeof(line)) len = sizeof(line) - 1;
+        memcpy(line, content.data() + pos, len);
+        pos = eol + 1;
+
         char* eq = strchr(line, '=');
         if (!eq) continue;
         *eq = 0;
@@ -265,7 +285,6 @@ void PollRuntimeFile() {
         else if (_stricmp(key, "smooth") == 0)  smooth = (float)atof(val);
         else if (_stricmp(key, "invert") == 0)  invert = atoi(val);
     }
-    fclose(f);
 
     if (enabled >= 0) {
         const bool e = enabled != 0;
