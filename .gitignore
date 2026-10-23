@@ -1,0 +1,11 @@
+build/
+out/
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+.vs/
+cmake-build-*/
+tpp_decomp/*
+mgsvtpp.exe
