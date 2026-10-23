@@ -496,8 +496,9 @@ bool InstallSpeedHook() {
         return false;
     }
     const std::string version = GetExeVersionString();
-    if (version != "1.0.15.4") {
-        LogWarn("executable version is %s, this build targets 1.0.15.4", version.c_str());
+    if (version != offsets::kTargetGameVersion) {
+        LogWarn("executable version is %s, this build targets %s",
+                version.c_str(), offsets::kTargetGameVersion);
     }
 
     size_t codeSize = 0;

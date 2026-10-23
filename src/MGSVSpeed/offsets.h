@@ -10,6 +10,9 @@
 // ===========================================================================
 namespace mgsvspeed::offsets {
 
+// Game build this plugin's RVAs/patterns were verified against.
+constexpr const char* kTargetGameVersion = "1.0.15.4";
+
 // tpp::gm::player::impl::BasicActionImpl::UpdateMoveForceByPad
 //   rcx = BasicActionImpl*, edx = player index, r8 = Work*
 // Reads the pad move force and stores it into Work::moveForce (+0x2C0).

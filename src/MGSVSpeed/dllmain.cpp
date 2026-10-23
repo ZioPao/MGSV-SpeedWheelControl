@@ -8,6 +8,7 @@
 #include "common.h"
 #include "config.h"
 #include "logger.h"
+#include "mgsvspeed_version.h"
 #include "speed.h"
 
 namespace {
@@ -30,7 +31,8 @@ DWORD WINAPI InitThread(LPVOID) {
     mgsvspeed::g_dllDir = DirOfModule(g_self);
     mgsvspeed::LogInit(mgsvspeed::g_dllDir + "\\MGSVSpeed.log");
 
-    mgsvspeed::LogRaw("=== MGSVSpeed v1.0.0 (mouse wheel dynamic movement speed) ===");
+    mgsvspeed::LogRaw(std::string("=== MGSVSpeed v") + MGSVSPEED_VERSION +
+                      " (mouse wheel dynamic movement speed) ===");
     mgsvspeed::LogInfo("dll dir: %s", mgsvspeed::g_dllDir.c_str());
 
     if (!mgsvspeed::InitModuleInfo()) {

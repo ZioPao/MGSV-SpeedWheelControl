@@ -1,10 +1,23 @@
 cmake_minimum_required(VERSION 3.20)
-project(MGSVSpeed LANGUAGES C CXX)
+project(MGSVSpeed VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(MINHOOK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/MinHook")
+
+# Single source of truth for the mod version: the project() version above feeds
+# both the log banner and the DLL VERSIONINFO resource.
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/mgsvspeed_version.h"
+    @ONLY
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/MGSVSpeed.rc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/MGSVSpeed.rc"
+    @ONLY
+)
 
 add_library(MGSVSpeed SHARED
     dllmain.cpp
@@ -13,6 +26,7 @@ add_library(MGSVSpeed SHARED
     logger.cpp
     common.cpp
     scanner.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/MGSVSpeed.rc
     ${MINHOOK_DIR}/src/hook.c
     ${MINHOOK_DIR}/src/buffer.c
     ${MINHOOK_DIR}/src/trampoline.c
@@ -21,6 +35,7 @@ add_library(MGSVSpeed SHARED
 
 target_include_directories(MGSVSpeed PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/generated
     ${MINHOOK_DIR}/include
     ${MINHOOK_DIR}/src
     ${MINHOOK_DIR}/src/hde
