@@ -15,6 +15,7 @@ struct Config {
 
     bool  invertWheel       = false;  // wheel up = slower
     int   defaultLevel      = 7;      // index into levels (top = vanilla run)
+    int   wheelStep         = 1;      // levels moved per wheel notch (1..3)
 
     // Each entry is a target move-speed *rate* (0..1) mapped through the game's
     // own force curve. 1.0 = vanilla keyboard run, lower = slower.

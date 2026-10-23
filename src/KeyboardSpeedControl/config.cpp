@@ -73,6 +73,7 @@ bool LoadConfig(const std::string& iniPath) {
         else if (!_stricmp(key, "logEveryFrame"))       g_cfg.logEveryFrame = ParseBool(val, g_cfg.logEveryFrame);
         else if (!_stricmp(key, "heartbeatSeconds"))    g_cfg.heartbeatSeconds = (int)strtol(val, nullptr, 0);
         else if (!_stricmp(key, "invertWheel"))         g_cfg.invertWheel = ParseBool(val, g_cfg.invertWheel);
+        else if (!_stricmp(key, "wheelStep"))           g_cfg.wheelStep = (int)strtol(val, nullptr, 0);
         else if (!_stricmp(key, "defaultLevel"))        g_cfg.defaultLevel = (int)strtol(val, nullptr, 0);
         else if (!_stricmp(key, "levels"))              g_cfg.levels = ParseFloatList(val, g_cfg.levels);
         else if (!_stricmp(key, "smoothSeconds"))       g_cfg.smoothSeconds = (float)atof(val);
@@ -120,6 +121,7 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
         "heartbeatSeconds=5       ; 0 disables\n"
         "\n"
         "invertWheel=0            ; 1 = wheel up slows down\n"
+        "wheelStep=1              ; levels moved per wheel notch (1..3)\n"
         "defaultLevel=7           ; index into levels (7 = vanilla run)\n"
         "\n"
         "; target move-speed rate per notch (0..1), 1.0 = vanilla run\n"

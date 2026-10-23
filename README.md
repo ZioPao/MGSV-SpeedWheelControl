@@ -29,9 +29,10 @@ F3 → **Keyboard Speed Control**:
 | Knob | Meaning |
 |---|---|
 | Speed system | master switch (same as F7) |
-| Speed level | 1–8; 8 = vanilla run, lower = slower |
+| Wheel step | levels moved per wheel notch (1–3) |
 | Transition smoothing | gait blend time when changing level (0–0.5 s) |
 | Invert wheel | wheel up = slower |
+| Reset level | jump back to vanilla run speed |
 
 The menu writes the values to `plugins/KeyboardSpeedControl.runtime`; the DLL polls that file every 250 ms, so changes apply instantly without restarting.
 
@@ -56,6 +57,7 @@ The INI provides defaults. Once Infinite Heaven writes `KeyboardSpeedControl.run
 | `levels` | `0.10,0.23,...,1.00` | target move-speed rate per notch; `1.0` = vanilla run |
 | `defaultLevel` | `7` | index of the starting notch (7 = top speed) |
 | `invertWheel` | `0` | `1` = wheel up slows down |
+| `wheelStep` | `1` | levels moved per wheel notch (1–3) |
 | `smoothSeconds` | `0.12` | gait transition smoothing |
 | `forceMin` / `forceMax` | `0` | `0` = read the game's own force limits (0.1 / 0.95) |
 | `playerIndex` | `-1` | `-1` = auto-detect the local player; force a value only if the log shows the wrong index |

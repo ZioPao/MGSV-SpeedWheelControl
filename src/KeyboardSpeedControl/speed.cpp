@@ -222,7 +222,8 @@ void ProcessWheel(float raw) {
     if (g_wheelAccum > 2.0f) g_wheelAccum = 2.0f;
     if (g_wheelAccum < -2.0f) g_wheelAccum = -2.0f;
 
-    SetLevel(g_level + steps, steps > 0 ? "wheel up" : "wheel down");
+    const int mult = (g_cfg.wheelStep >= 1) ? g_cfg.wheelStep : 1;
+    SetLevel(g_level + steps * mult, steps > 0 ? "wheel up" : "wheel down");
 }
 
 void UpdateSmoothing(double now) {
@@ -261,6 +262,7 @@ void PollRuntimeFile() {
     int   enabled = -1;
     int   level = -1;
     int   invert = -1;
+    int   step = -1;
     float smooth = -1.0f;
 
     size_t pos = 0;
@@ -288,6 +290,7 @@ void PollRuntimeFile() {
         else if (_stricmp(key, "level") == 0)   level = atoi(val);
         else if (_stricmp(key, "smooth") == 0)  smooth = (float)atof(val);
         else if (_stricmp(key, "invert") == 0)  invert = atoi(val);
+        else if (_stricmp(key, "step") == 0)    step = atoi(val);
     }
 
     if (enabled >= 0) {
@@ -300,6 +303,13 @@ void PollRuntimeFile() {
     }
     if (level >= 1) {
         SetLevel(level - 1, "IH menu");
+    }
+    if (step >= 1) {
+        const int s = (step > 3) ? 3 : step;
+        if (s != g_cfg.wheelStep) {
+            g_cfg.wheelStep = s;
+            LogInfo("IH menu: wheel step %d", s);
+        }
     }
     if (smooth >= 0.0f && std::fabs(smooth - g_cfg.smoothSeconds) > 0.0005f) {
         g_cfg.smoothSeconds = smooth;
