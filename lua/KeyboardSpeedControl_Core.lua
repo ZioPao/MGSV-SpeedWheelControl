@@ -135,7 +135,15 @@ function this.GenerateMenus()
     for _, ref in ipairs(root.options) do
       if ref == "InfMenuDefs.kscMenu" then return end
     end
-    table.insert(root.options, 1, "InfMenuDefs.kscMenu")
+    -- Append near the bottom, but above the trailing help entry.
+    local index = #root.options + 1
+    for i = #root.options, 1, -1 do
+      if root.options[i] == "InfMenuCommands.GeneralHelpItem" then
+        index = i
+        break
+      end
+    end
+    table.insert(root.options, index, "InfMenuDefs.kscMenu")
   end
 
   addToRoot(InfMenuDefs.inMissionMenu)
