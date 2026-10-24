@@ -32,7 +32,6 @@ F3 → **Keyboard Speed Control**:
 | Wheel step | levels moved per wheel notch (1–3) |
 | Transition smoothing | gait blend time when changing level (0–0.5 s) |
 | Invert wheel | wheel up = slower |
-| Reset level | jump back to vanilla run speed |
 
 The menu writes the values to `plugins/KeyboardSpeedControl.runtime`; the DLL polls that file every 250 ms, so changes apply instantly without restarting.
 

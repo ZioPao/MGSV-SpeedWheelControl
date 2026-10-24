@@ -38,7 +38,7 @@ local function IvarValue(name, default)
   return default
 end
 
-local function WriteRuntime(includeLevel)
+local function WriteRuntime()
   local f = io.open(RuntimePath(), "w")
   if not f then return end
   writeSeq = writeSeq + 1
@@ -47,11 +47,6 @@ local function WriteRuntime(includeLevel)
   f:write(string.format("smooth=%.3f\n", IvarValue("ksc_smooth", 0.12)))
   f:write("invert=" .. tostring(IvarValue("ksc_invert", 0)) .. "\n")
   f:write("step=" .. tostring(IvarValue("ksc_wheelStep", 1)) .. "\n")
-  if includeLevel then
-    -- One-shot: jump to the top of the ladder. Normal writes omit level so the
-    -- wheel stays authoritative.
-    f:write("level=8\n")
-  end
   f:close()
 end
 
@@ -64,7 +59,7 @@ end
 -- ---------------------------------------------------------------------------
 
 local function OnChange()
-  pcall(function() WriteRuntime(false) end)
+  pcall(WriteRuntime)
 end
 
 this.registerIvars = {
@@ -119,14 +114,6 @@ this.ksc_invert = {
   OnChange = OnChange,
 }
 
--- Command item: jump back to vanilla run speed.
-function this.ResetLevel()
-  pcall(function() WriteRuntime(true) end)
-  if InfCore and InfCore.Log then
-    InfCore.Log("KeyboardSpeedControl: level reset to top")
-  end
-end
-
 -- ---------------------------------------------------------------------------
 -- Menu page
 -- ---------------------------------------------------------------------------
@@ -141,7 +128,6 @@ function this.GenerateMenus()
       "Ivars.ksc_wheelStep",
       "Ivars.ksc_smooth",
       "Ivars.ksc_invert",
-      "KeyboardSpeedControl_Core.ResetLevel",
     },
   }
 
@@ -166,9 +152,8 @@ function this.GenerateMenus()
 end
 
 function this.PostAllModulesLoad()
-  -- Publish the persisted settings; level is intentionally omitted so the wheel
-  -- remains the authority over the current speed.
-  WriteRuntime(false)
+  -- Publish the persisted settings; the wheel remains the authority over speed.
+  WriteRuntime()
 end
 
 _G.KeyboardSpeedControl_Core = this
