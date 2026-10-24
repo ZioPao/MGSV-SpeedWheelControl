@@ -1,4 +1,5 @@
 build/
+bundle/
 out/
 *.obj
 *.pdb

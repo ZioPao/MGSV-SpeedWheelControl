@@ -1,6 +1,5 @@
 #include "scanner.h"
 
-#include <cstring>
 #include <vector>
 
 namespace ksc {
@@ -51,23 +50,6 @@ uintptr_t FindPattern(uintptr_t start, size_t size, const char* pattern) {
         if (j == pat.size()) return start + i;
     }
     return 0;
-}
-
-size_t FindPatternAll(uintptr_t start, size_t size, const char* pattern,
-                      uintptr_t* out, size_t maxOut) {
-    std::vector<PatternByte> pat = ParsePattern(pattern);
-    size_t found = 0;
-    if (pat.empty() || size < pat.size()) return 0;
-    const uint8_t* bytes = reinterpret_cast<const uint8_t*>(start);
-    const size_t last = size - pat.size();
-    for (size_t i = 0; i <= last && found < maxOut; ++i) {
-        size_t j = 0;
-        for (; j < pat.size(); ++j) {
-            if (!pat[j].wildcard && bytes[i + j] != pat[j].value) break;
-        }
-        if (j == pat.size()) out[found++] = start + i;
-    }
-    return found;
 }
 
 bool MatchPattern(uintptr_t address, const char* pattern) {

@@ -104,6 +104,8 @@ Then:
 ```powershell
 .\build.ps1            # configure + build (also inits the submodule)
 .\build.ps1 -Deploy    # build, copy the DLL and the IH module into the game
+.\bundle.ps1           # build + assemble bundle/MGS_TPP (plugins/, mod/modules/)
+.\bundle.ps1 -Deploy   # build, assemble the bundle, then copy its tree into the game
 ```
 
 Output: `build/Release/KeyboardSpeedControl.dll`, source for the IH module: `lua/KeyboardSpeedControl_Core.lua`.

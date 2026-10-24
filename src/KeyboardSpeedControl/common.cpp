@@ -47,6 +47,7 @@ std::string GetExeVersionString() {
     return version;
 }
 
+namespace {
 std::string Narrow(const std::wstring& ws) {
     if (ws.empty()) return {};
     int len = WideCharToMultiByte(CP_ACP, 0, ws.c_str(), (int)ws.size(), nullptr, 0, nullptr, nullptr);
@@ -54,6 +55,7 @@ std::string Narrow(const std::wstring& ws) {
     WideCharToMultiByte(CP_ACP, 0, ws.c_str(), (int)ws.size(), &out[0], len, nullptr, nullptr);
     return out;
 }
+} // namespace
 
 std::string GetGameDir() {
     wchar_t path[MAX_PATH]{};

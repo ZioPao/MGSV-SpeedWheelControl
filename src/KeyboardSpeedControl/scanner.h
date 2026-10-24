@@ -8,10 +8,6 @@ namespace ksc {
 // Returns the first match address (absolute) inside [start, start+size), or 0.
 uintptr_t FindPattern(uintptr_t start, size_t size, const char* pattern);
 
-// Same, but returns all matches.
-size_t FindPatternAll(uintptr_t start, size_t size, const char* pattern,
-                      uintptr_t* out, size_t maxOut);
-
 // Compare memory against a wildcard pattern (used to validate hardcoded addrs).
 bool MatchPattern(uintptr_t address, const char* pattern);
 

@@ -1,16 +1,9 @@
 // Keyboard Speed Control - dynamic on-foot movement speed for MGSV:TPP.
 //
-// The game drives both locomotion and the walk/jog/run animation blend from a
-// single analog "move force" (Work +0x2C0, range 0.1 .. 0.95). Keyboard input is
-// binary (0.95 = run), which is why the only speed control is CTRL = walk.
-//
-// We hook the two engine points that own that value:
-//   PadImpl::Update                - read the game's own mouse wheel delta (+0x48C)
-//   BasicActionImpl::UpdateMoveForceByPad - scale the force before UpdateMoveSpeed
-//                                    turns it into the motion-graph speed rate.
-//
-// Scaling the force keeps animation speed and root motion in sync: the character
-// walks/jogs/runs at the selected speed instead of sliding.
+// Both locomotion and the walk/jog/run blend are driven by Work+0x2C0 (move
+// force, 0.1..0.95). PadImpl::Update gives us the game's wheel delta;
+// UpdateMoveForceByPad is where we scale that force. Scaling it keeps animation
+// speed and root motion in sync instead of sliding.
 #include "speed.h"
 
 #include "common.h"
@@ -42,7 +35,6 @@ UpdateMoveForceByPadFn g_origMoveForce = nullptr;
 uintptr_t g_padUpdateTarget = 0;
 uintptr_t g_moveForceTarget = 0;
 
-// --- speed state -----------------------------------------------------------
 int   g_level = 7;
 float g_targetMul = 1.0f;
 float g_currentMul = 1.0f;
@@ -52,7 +44,6 @@ float g_lastRawWheel = 0.0f;
 float g_forceMin = offsets::kStickForceMinDefault;
 float g_forceMax = offsets::kStickForceMaxDefault;
 
-// Last observed values, for logging only.
 float    g_lastForceIn = 0.0f;
 float    g_lastForceOut = 0.0f;
 float    g_lastWheel = 0.0f;
@@ -64,7 +55,6 @@ volatile LONG g_applyCount = 0;
 int    g_localIndex = -1;
 double g_lastLocalSeen = 0.0;
 double g_lastSmoothTime = 0.0;
-double g_lastInputTime = 0.0;
 double g_lastHeartbeat = 0.0;
 double g_lastWheelLog = 0.0;
 unsigned g_nonLocalSeen = 0;
@@ -141,7 +131,6 @@ float EstimateSpeed(unsigned stance, float rate) {
     if (stance == 3) {  // crawl
         return (1.0f - rate) * 0.61341f + rate * 1.22705f;
     }
-    // stand
     if (rate >= 0.5f) {
         const float t = (rate - 0.5f) * 2.0f;
         return (1.0f - t) * kWalkMax + t * kRunMax;
@@ -344,10 +333,6 @@ void CheckHotkeys() {
     }
     lastF8 = f8;
 }
-
-// ---------------------------------------------------------------------------
-// Hooks
-// ---------------------------------------------------------------------------
 
 void __fastcall PadUpdateHook(void* self) {
     g_origPadUpdate(self);
