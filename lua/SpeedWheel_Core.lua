@@ -1,17 +1,17 @@
--- KeyboardSpeedControl_Core.lua
--- Infinite Heaven external module: adds the Keyboard Speed Control knobs to the IH menu (F3)
--- and publishes them to plugins/KeyboardSpeedControl.runtime, which KeyboardSpeedControl.dll polls.
+-- SpeedWheel_Core.lua
+-- Infinite Heaven external module: adds the Speed Wheel Control knobs to the IH menu (F3)
+-- and publishes them to plugins/SpeedWheel.runtime, which SpeedWheel.dll polls.
 --
--- Install: copy to MGS_TPP/mod/modules/KeyboardSpeedControl_Core.lua
+-- Install: copy to MGS_TPP/mod/modules/SpeedWheel_Core.lua
 -- IH auto-loads every .lua in that folder, so no other setup is needed.
 
 local this = {}
 
-if rawget(_G, "KeyboardSpeedControl_Core") then
-  return _G.KeyboardSpeedControl_Core
+if rawget(_G, "SpeedWheel_Core") then
+  return _G.SpeedWheel_Core
 end
 
-local runtimeName = "KeyboardSpeedControl.runtime"
+local runtimeName = "SpeedWheel.runtime"
 local writeSeq = 0
 
 local function GamePath()
@@ -43,10 +43,10 @@ local function WriteRuntime()
   if not f then return end
   writeSeq = writeSeq + 1
   f:write("seq=" .. tostring(writeSeq) .. "\n")
-  f:write("enabled=" .. tostring(IvarValue("ksc_enabled", 1)) .. "\n")
-  f:write(string.format("smooth=%.3f\n", IvarValue("ksc_smooth", 0.12)))
-  f:write("invert=" .. tostring(IvarValue("ksc_invert", 0)) .. "\n")
-  f:write("step=" .. tostring(IvarValue("ksc_wheelStep", 1)) .. "\n")
+  f:write("enabled=" .. tostring(IvarValue("sw_enabled", 1)) .. "\n")
+  f:write(string.format("smooth=%.3f\n", IvarValue("sw_smooth", 0.12)))
+  f:write("invert=" .. tostring(IvarValue("sw_invert", 0)) .. "\n")
+  f:write("step=" .. tostring(IvarValue("sw_wheelStep", 1)) .. "\n")
   f:close()
 end
 
@@ -63,13 +63,13 @@ local function OnChange()
 end
 
 this.registerIvars = {
-  "ksc_enabled",
-  "ksc_wheelStep",
-  "ksc_smooth",
-  "ksc_invert",
+  "sw_enabled",
+  "sw_wheelStep",
+  "sw_smooth",
+  "sw_invert",
 }
 
-this.ksc_enabled = {
+this.sw_enabled = {
   description = "Speed system",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
@@ -79,7 +79,7 @@ this.ksc_enabled = {
   OnChange = OnChange,
 }
 
-this.ksc_wheelStep = {
+this.sw_wheelStep = {
   description = "Wheel step",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
@@ -92,7 +92,7 @@ this.ksc_wheelStep = {
   end,
 }
 
-this.ksc_smooth = {
+this.sw_smooth = {
   description = "Transition smoothing",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
@@ -104,7 +104,7 @@ this.ksc_smooth = {
   end,
 }
 
-this.ksc_invert = {
+this.sw_invert = {
   description = "Invert wheel",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
@@ -121,20 +121,20 @@ this.ksc_invert = {
 function this.GenerateMenus()
   if not InfMenuDefs then return end
 
-  InfMenuDefs.kscMenu = {
-    description = "Keyboard Speed Control",
+  InfMenuDefs.swMenu = {
+    description = "Speed Wheel Control",
     options = {
-      "Ivars.ksc_enabled",
-      "Ivars.ksc_wheelStep",
-      "Ivars.ksc_smooth",
-      "Ivars.ksc_invert",
+      "Ivars.sw_enabled",
+      "Ivars.sw_wheelStep",
+      "Ivars.sw_smooth",
+      "Ivars.sw_invert",
     },
   }
 
   local function addToRoot(root)
     if not (root and root.options) then return end
     for _, ref in ipairs(root.options) do
-      if ref == "InfMenuDefs.kscMenu" then return end
+      if ref == "InfMenuDefs.swMenu" then return end
     end
     -- Append near the bottom, but above the trailing help entry.
     local index = #root.options + 1
@@ -144,7 +144,7 @@ function this.GenerateMenus()
         break
       end
     end
-    table.insert(root.options, index, "InfMenuDefs.kscMenu")
+    table.insert(root.options, index, "InfMenuDefs.swMenu")
   end
 
   addToRoot(InfMenuDefs.inMissionMenu)
@@ -156,6 +156,6 @@ function this.PostAllModulesLoad()
   WriteRuntime()
 end
 
-_G.KeyboardSpeedControl_Core = this
+_G.SpeedWheel_Core = this
 
 return this

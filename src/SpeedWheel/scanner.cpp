@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace ksc {
+namespace sw {
 
 namespace {
 
@@ -62,4 +62,4 @@ bool MatchPattern(uintptr_t address, const char* pattern) {
     return true;
 }
 
-} // namespace ksc
+} // namespace sw

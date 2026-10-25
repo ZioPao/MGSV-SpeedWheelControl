@@ -8,7 +8,7 @@
 // The retail code section (.xtext) is plaintext, so the patterns match the
 // file bytes exactly.
 // ===========================================================================
-namespace ksc::offsets {
+namespace sw::offsets {
 
 // Game build this plugin's RVAs/patterns were verified against.
 constexpr const char* kTargetGameVersion = "1.0.15.4";
@@ -65,4 +65,4 @@ constexpr uintptr_t kStickForceMaxRva = 0x2AD04C0;  // 0.95f
 constexpr float     kStickForceMinDefault = 0.1f;
 constexpr float     kStickForceMaxDefault = 0.95f;
 
-} // namespace ksc::offsets
+} // namespace sw::offsets

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ksc {
+namespace sw {
 
 // Resolves UpdateMoveForceByPad, installs the detour and starts the speed state.
 bool InstallSpeedHook();
@@ -9,4 +9,4 @@ bool InstallSpeedHook();
 // hook is not receiving frames (menus, loading screens).
 void SpeedTick();
 
-} // namespace ksc
+} // namespace sw

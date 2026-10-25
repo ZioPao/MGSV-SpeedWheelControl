@@ -21,8 +21,8 @@ $gameName = Split-Path -Leaf $gameRoot
 & (Join-Path $root "build.ps1")
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-$dll = Join-Path $root "build\Release\KeyboardSpeedControl.dll"
-$lua = Join-Path $root "lua\KeyboardSpeedControl_Core.lua"
+$dll = Join-Path $root "build\Release\SpeedWheel.dll"
+$lua = Join-Path $root "lua\SpeedWheel_Core.lua"
 foreach ($f in @($dll, $lua)) {
     if (-not (Test-Path $f)) { throw "missing $f - build failed" }
 }
@@ -35,11 +35,11 @@ $stage = Join-Path $out $gameName
 New-Item -ItemType Directory -Force (Join-Path $stage "plugins")     | Out-Null
 New-Item -ItemType Directory -Force (Join-Path $stage "mod\modules") | Out-Null
 
-Copy-Item $dll (Join-Path $stage "plugins\KeyboardSpeedControl.dll")
-Copy-Item $lua (Join-Path $stage "mod\modules\KeyboardSpeedControl_Core.lua")
+Copy-Item $dll (Join-Path $stage "plugins\SpeedWheel.dll")
+Copy-Item $lua (Join-Path $stage "mod\modules\SpeedWheel_Core.lua")
 
 if ($Zip) {
-    $zip = Join-Path $root "KeyboardSpeedControl.zip"
+    $zip = Join-Path $root "SpeedWheel.zip"
     if (Test-Path $zip) { Remove-Item $zip -Force }
     Compress-Archive -Path $stage -DestinationPath $zip
     Write-Host "zipped: $zip"
@@ -58,13 +58,18 @@ if ($Deploy) {
         Write-Host "deployed $relative"
     }
 
-    # Old name from before the rename must not be loaded alongside this DLL.
+    # Old names from before the rename must not be loaded alongside this DLL.
     foreach ($legacy in @(
         (Join-Path $gameRoot "plugins\MGSVSpeed.dll"),
         (Join-Path $gameRoot "plugins\MGSVSpeed.ini"),
         (Join-Path $gameRoot "plugins\MGSVSpeed.log"),
         (Join-Path $gameRoot "plugins\MGSVSpeed.runtime"),
-        (Join-Path $gameRoot "mod\modules\MGSVSpeed_Core.lua")
+        (Join-Path $gameRoot "mod\modules\MGSVSpeed_Core.lua"),
+        (Join-Path $gameRoot "plugins\KeyboardSpeedControl.dll"),
+        (Join-Path $gameRoot "plugins\KeyboardSpeedControl.ini"),
+        (Join-Path $gameRoot "plugins\KeyboardSpeedControl.log"),
+        (Join-Path $gameRoot "plugins\KeyboardSpeedControl.runtime"),
+        (Join-Path $gameRoot "mod\modules\KeyboardSpeedControl_Core.lua")
     )) {
         if (Test-Path $legacy) {
             Remove-Item $legacy -Force

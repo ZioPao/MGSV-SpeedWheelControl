@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace ksc {
+namespace sw {
 
 void LogInit(const std::string& filePath);
 void LogRaw(const std::string& line);
@@ -10,4 +10,4 @@ void LogWarn(const char* fmt, ...);
 void LogError(const char* fmt, ...);
 void LogBeat(const char* fmt, ...);
 
-} // namespace ksc
+} // namespace sw

@@ -1,4 +1,4 @@
-// Keyboard Speed Control - dynamic on-foot movement speed for MGSV:TPP.
+// Speed Wheel Control - dynamic on-foot movement speed for MGSV:TPP.
 //
 // Both locomotion and the walk/jog/run blend are driven by Work+0x2C0 (move
 // force, 0.1..0.95). PadImpl::Update gives us the game's wheel delta;
@@ -22,7 +22,7 @@
 #include <cstring>
 #include <string>
 
-namespace ksc {
+namespace sw {
 
 namespace {
 
@@ -231,11 +231,11 @@ void UpdateSmoothing(double now) {
     if (std::fabs(g_currentMul - g_targetMul) < 0.001f) g_currentMul = g_targetMul;
 }
 
-// The Infinite Heaven module KeyboardSpeedControl_Core writes this file whenever a knob
+// The Infinite Heaven module SpeedWheel_Core writes this file whenever a knob
 // changes; we mirror it into the live state. The menu is the only writer, so only a
 // content change is applied: polling must not undo wheel/hotkey changes.
 void PollRuntimeFile() {
-    const std::string path = g_dllDir + "\\KeyboardSpeedControl.runtime";
+    const std::string path = g_dllDir + "\\SpeedWheel.runtime";
     FILE* f = nullptr;
     if (fopen_s(&f, path.c_str(), "r") != 0 || !f) return;
 
@@ -575,4 +575,4 @@ void SpeedTick() {
             (long)g_frames, (long)g_applyCount);
 }
 
-} // namespace ksc
+} // namespace sw

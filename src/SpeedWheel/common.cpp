@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <string>
 
-namespace ksc {
+namespace sw {
 
 uintptr_t   g_base = 0;
 size_t      g_size = 0;
@@ -66,4 +66,4 @@ std::string GetGameDir() {
     return Narrow(ws.substr(0, pos));
 }
 
-} // namespace ksc
+} // namespace sw

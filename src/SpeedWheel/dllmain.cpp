@@ -1,5 +1,5 @@
-// Keyboard Speed Control - dynamic on-foot movement speed for MGSV:TPP, loaded as an IHHook
-// plugin (MGS_TPP/plugins/KeyboardSpeedControl.dll, requires enable_dll_loader = true in
+// Speed Wheel Control - dynamic on-foot movement speed for MGSV:TPP, loaded as an IHHook
+// plugin (MGS_TPP/plugins/SpeedWheel.dll, requires enable_dll_loader = true in
 // ihhook_config.lua).
 #include <windows.h>
 
@@ -8,7 +8,7 @@
 #include "common.h"
 #include "config.h"
 #include "logger.h"
-#include "ksc_version.h"
+#include "sw_version.h"
 #include "speed.h"
 
 namespace {
@@ -28,34 +28,34 @@ std::string DirOfModule(HMODULE mod) {
 }
 
 DWORD WINAPI InitThread(LPVOID) {
-    ksc::g_dllDir = DirOfModule(g_self);
-    ksc::LogInit(ksc::g_dllDir + "\\KeyboardSpeedControl.log");
+    sw::g_dllDir = DirOfModule(g_self);
+    sw::LogInit(sw::g_dllDir + "\\SpeedWheel.log");
 
-    ksc::LogRaw(std::string("=== Keyboard Speed Control v") + KSC_VERSION +
+    sw::LogRaw(std::string("=== Speed Wheel Control v") + SW_VERSION +
                 " (mouse wheel dynamic movement speed) ===");
-    ksc::LogInfo("dll dir: %s", ksc::g_dllDir.c_str());
+    sw::LogInfo("dll dir: %s", sw::g_dllDir.c_str());
 
-    if (!ksc::InitModuleInfo()) {
-        ksc::LogError("could not read module info - aborting");
+    if (!sw::InitModuleInfo()) {
+        sw::LogError("could not read module info - aborting");
         return 0;
     }
-    ksc::LogInfo("target: %s  version %s  base 0x%llX  size 0x%zX",
-                       ksc::GetGameDir().c_str(),
-                       ksc::GetExeVersionString().c_str(),
-                       (unsigned long long)ksc::g_base,
-                       ksc::g_size);
+    sw::LogInfo("target: %s  version %s  base 0x%llX  size 0x%zX",
+                       sw::GetGameDir().c_str(),
+                       sw::GetExeVersionString().c_str(),
+                       (unsigned long long)sw::g_base,
+                       sw::g_size);
 
-    const std::string ini = ksc::ConfigPathFor(ksc::g_dllDir);
-    ksc::WriteDefaultConfigIfMissing(ini);
-    ksc::LoadConfig(ini);
+    const std::string ini = sw::ConfigPathFor(sw::g_dllDir);
+    sw::WriteDefaultConfigIfMissing(ini);
+    sw::LoadConfig(ini);
 
-    if (!ksc::InstallSpeedHook()) {
-        ksc::LogError("speed hook installation failed - plugin is inert");
+    if (!sw::InstallSpeedHook()) {
+        sw::LogError("speed hook installation failed - plugin is inert");
     }
 
     for (;;) {
         Sleep(250);
-        ksc::SpeedTick();
+        sw::SpeedTick();
     }
 }
 } // namespace

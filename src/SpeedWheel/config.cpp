@@ -6,12 +6,12 @@
 #include <cstring>
 #include <string>
 
-namespace ksc {
+namespace sw {
 
 Config g_cfg;
 
 std::string ConfigPathFor(const std::string& dllDir) {
-    return dllDir + "\\KeyboardSpeedControl.ini";
+    return dllDir + "\\SpeedWheel.ini";
 }
 
 namespace {
@@ -108,7 +108,7 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
     if (fopen_s(&f, iniPath.c_str(), "w") != 0 || !f) return;
 
     fprintf(f,
-        "; Keyboard Speed Control - dynamic on-foot movement speed (mouse wheel)\n"
+        "; Speed Wheel Control - dynamic on-foot movement speed (mouse wheel)\n"
         "; 1.0 speed rate = vanilla keyboard run. The wheel can only slow you down\n"
         "; from vanilla; wheel up returns to normal speed.\n"
         "\n"
@@ -139,4 +139,4 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
     LogInfo("wrote default config to %s", iniPath.c_str());
 }
 
-} // namespace ksc
+} // namespace sw
