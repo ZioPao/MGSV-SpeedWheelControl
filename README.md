@@ -1,4 +1,6 @@
-# Speed Wheel Control
+<h1 align="center">
+  <img src="logo.png" alt="Speed Wheel Control" width="720">
+</h1>
 
 Dynamic on-foot movement speed for **Metal Gear Solid V: The Phantom Pain** (1.0.15.4 EN), in the spirit of Splinter Cell: scroll the mouse wheel to pick a speed, and Snake moves at that speed with matching walk/jog/run animation.
 
