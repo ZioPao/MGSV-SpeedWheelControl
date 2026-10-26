@@ -66,15 +66,16 @@ notch meant for zoom would also move the speed level:
 
 | Consumer | RVA | Notes |
 |---|---|---|
-| `PadImpl::GetWheel` | `0x1205E60` | vtable-only accessor (`F3 0F 10 81 8C 04 00 00 C3`); the iDroid map/UI reads the wheel through it |
 | Wheel zoom handler | `0xB5D560` | camera/binocular zoom; invoked from `0xB5D750` when the pad wheel flag is set, handles both directions |
 | Pad wheel flags | `+0x564` | `0x80000` = wheel produced a delta, `0x100000` = negative direction |
 
-`SpeedWheel` defers each notch by one frame and drops it when either consumer
-read the wheel in that frame, so scope/binocular and map zoom never change the
-speed level. The accessor hook classifies callers: a caller that polls the
-accessor while the wheel is idle (HUD) is ignored, an on-demand caller (map/UI
-zoom) gates the notch. `gateZoom=0` restores the old behavior.
+`PadImpl::GetWheel` (`0x1205E60`) exists but the game never calls it, so it is
+not hooked.
+
+`SpeedWheel` defers each notch by one frame and drops it when the zoom handler
+read the wheel in that frame; the scope/binocular path is additionally gated by
+the player status bit `BINOCLE` (58) and the iDroid map by IH's `inIdroid`.
+`gateZoom=0` restores the old behavior.
 
 ## Player status bits
 

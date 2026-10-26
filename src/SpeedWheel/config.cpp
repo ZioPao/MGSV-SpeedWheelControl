@@ -84,7 +84,6 @@ bool LoadConfig(const std::string& iniPath) {
         else if (!_stricmp(key, "gateZoom"))            g_cfg.gateZoom = ParseBool(val, g_cfg.gateZoom);
         else if (!_stricmp(key, "gateBinoc"))           g_cfg.gateBinoc = ParseBool(val, g_cfg.gateBinoc);
         else if (!_stricmp(key, "gateIdroid"))          g_cfg.gateIdroid = ParseBool(val, g_cfg.gateIdroid);
-        else if (!_stricmp(key, "aimKey"))              g_cfg.aimKey = (int)strtol(val, nullptr, 0);
         else if (!_stricmp(key, "playerIndex"))         g_cfg.playerIndex = (int)strtol(val, nullptr, 0);
         else {
             LogWarn("config: unknown key '%s'", key);
@@ -140,7 +139,6 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
         "gateZoom=1               ; drop notches the game used for scope / iDroid map zoom\n"
         "gateBinoc=1              ; drop notches while the binoculars / int-scope is up\n"
         "gateIdroid=1             ; drop notches while the iDroid map is open\n"
-        "aimKey=0                 ; VK_RBUTTON: also drop while this is held (0 = off, aiming keeps working)\n"
         "\n"
         "playerIndex=-1           ; -1 = auto-detect the local player's index\n");
     fclose(f);

@@ -53,25 +53,19 @@ constexpr uintptr_t kPadMoveAngle = 0x14;   // float, radians
 
 // Raw pad input bits (wheel event, per frame). The wheel delta at +0x48C is
 // shared by every consumer: our speed wheel, the scope/binocular zoom and the
-// iDroid map/UI. These bits say whether the wheel moved this frame.
+// iDroid map. These bits say whether the wheel moved this frame.
 constexpr uintptr_t kPadInputFlags     = 0x564;  // uint32
 constexpr uint32_t  kPadFlagWheelActive = 0x00080000;  // wheel produced a delta
-constexpr uint32_t  kPadFlagWheelDown   = 0x00100000;  // negative direction
 
 // ---------------------------------------------------------------------------
 // Wheel consumers. The wheel is a single shared per-frame delta, so a notch
-// meant for zoom would also move the speed level. Both native consumers are
-// hooked to tag the notch as "used by the game" and drop it.
+// meant for zoom would also move the speed level.
 // ---------------------------------------------------------------------------
 
-// PadImpl::GetWheel - vtable-only accessor returning PadImpl+0x48C. UI/map
-// code reads the wheel through this, never through a direct call.
-constexpr uintptr_t kPadWheelGetterRva = 0x1205E60;
-const char* const   kPadWheelGetterPat =
-    "F3 0F 10 81 8C 04 00 00 C3 CC CC CC CC CC CC CC";
-
 // Wheel-driven camera zoom (scope/binoculars). Method of the player camera
-// manager: (self, playerIndex, PadImpl*), reads PadImpl+0x48C.
+// manager: (self, playerIndex, PadImpl*), reads PadImpl+0x48C. This is the only
+// game code that reads the wheel field directly; PadImpl::GetWheel
+// (rva 0x1205E60) exists but is never called, so it is not hooked.
 constexpr uintptr_t kZoomWheelHandlerRva = 0xB5D560;
 const char* const   kZoomWheelHandlerPat =
     "40 55 48 8B EC 48 83 EC 60 48 8B 05 C0 BD FE 01";
@@ -91,7 +85,6 @@ constexpr uintptr_t kStatusIndexRva  = 0x2BD8FD4;  // int32, local player index
 constexpr uintptr_t kStatusStride    = 0xE0;
 constexpr uintptr_t kStatusBits      = 0xC0;
 constexpr unsigned  kStatusBinocle   = 58;         // "using int-scope" (binoculars)
-constexpr unsigned  kStatusGunReady  = 10;         // aiming a weapon
 
 // Pointer chain used inside UpdateMoveForceByPad itself:
 //   pad = [[[self + 0x8] + 0x138] + 0xB0]

@@ -365,7 +365,6 @@ void __fastcall PadUpdateHook(void* self) {
     if (!SafeRead(reinterpret_cast<uintptr_t>(self) + offsets::kPadWheel, wheel)) return;
 
     FlushPendingWheel(now);
-    WheelGateTick();
     if (wheel != 0.0f) {
         g_pendingWheel = wheel;
         g_pendingWheelAt = now;
@@ -520,14 +519,10 @@ bool InstallSpeedHook() {
                                       offsets::kUpdateMoveForceByPadPat);
     if (!g_padUpdateTarget || !g_moveForceTarget) return false;
 
-    // Optional: wheel consumers used for scope/map zoom. Missing hooks only
-    // cost the zoom gate, never the speed system itself.
-    uintptr_t wheelGetterTarget = 0;
+    // Optional: the native camera zoom consumer. A pattern miss only costs the
+    // zoom gate, never the speed system itself.
     uintptr_t zoomHandlerTarget = 0;
     if (g_cfg.gateZoom) {
-        wheelGetterTarget = ResolveTarget(codeStart, codeSize, "PadImpl::GetWheel",
-                                          offsets::kPadWheelGetterRva,
-                                          offsets::kPadWheelGetterPat);
         zoomHandlerTarget = ResolveTarget(codeStart, codeSize, "ZoomWheelHandler",
                                           offsets::kZoomWheelHandlerRva,
                                           offsets::kZoomWheelHandlerPat);
@@ -575,7 +570,7 @@ bool InstallSpeedHook() {
         return false;
     }
 
-    InstallWheelGate(wheelGetterTarget, zoomHandlerTarget);
+    InstallWheelGate(zoomHandlerTarget);
 
     LogInfo("hooked PadImpl::Update @ 0x%llX (wheel +0x%X)",
             (unsigned long long)g_padUpdateTarget, (unsigned)offsets::kPadWheel);
