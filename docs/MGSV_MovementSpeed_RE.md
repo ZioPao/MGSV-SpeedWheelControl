@@ -59,7 +59,7 @@ clamp of the rate curve inside `UpdateMoveSpeed`, so the scaling guard has no up
 bound. Scaling is floored at `STICK_FORCE_MIN` so the state machine still sees
 movement input.
 
-## Shared wheel consumers
+## Wheel ownership
 
 `PadImpl + 0x48C` is one per-frame delta shared by every wheel consumer, so a
 notch meant for zoom would also move the speed level:

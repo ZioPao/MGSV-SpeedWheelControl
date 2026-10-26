@@ -14,9 +14,6 @@ Dynamic on-foot movement speed for **Metal Gear Solid V: The Phantom Pain** (1.0
 - [IHHook](https://github.com/kapuragu/IHHook) with `enable_dll_loader=true` in `ihhook_config.lua`
 - [Infinite Heaven](https://www.nexusmods.com/metalgearsolidvtpp/mods/45)
 
-
-
-
 ## In-game knobs (F3 → Speed Wheel Control)
 
 | Knob | Meaning |
@@ -26,7 +23,6 @@ Dynamic on-foot movement speed for **Metal Gear Solid V: The Phantom Pain** (1.0
 | Transition smoothing | gait blend time when changing level (0–0.5 s) |
 | Invert wheel | wheel up = slower |
 
-
 ## Config (`SpeedWheel.ini`)
 
 Values here are defaults. Once Infinite Heaven writes `SpeedWheel.runtime`, the menu values take over.
@@ -34,6 +30,7 @@ Values here are defaults. Once Infinite Heaven writes `SpeedWheel.runtime`, the 
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `1` | master switch |
+| `hotkeyEnabled` | `1` | F7 = toggle, F8 = reset to top speed |
 | `levels` | `0.10,0.23,...,1.00` | target move-speed rate per notch; `1.0` = vanilla run |
 | `defaultLevel` | `7` | index of the starting notch (7 = top speed) |
 | `invertWheel` | `0` | `1` = wheel up slows down |
@@ -44,8 +41,11 @@ Values here are defaults. Once Infinite Heaven writes `SpeedWheel.runtime`, the 
 | `gateZoom` | `1` | master switch for the wheel-ownership gates |
 | `gateBinoc` | `1` | drop notches while the binoculars / int-scope is up |
 | `gateIdroid` | `1` | drop notches while the iDroid map is open (published by the IH module) |
+| `requireForeground` | `1` | ignore the wheel when the game is not focused |
+| `requireCursorHidden` | `1` | ignore the wheel while a menu shows the cursor |
 | `logLevelChanges` | `1` | one log line per notch |
-| `logWheel` | `1` | log raw wheel deltas |
+| `logWheel` | `1` | raw wheel deltas and gate decisions |
+| `logEveryFrame` | `0` | per-frame force log; debug only, very noisy |
 | `heartbeatSeconds` | `5` | periodic state line; `0` disables |
 
 ## Build
@@ -65,7 +65,8 @@ Output: `build/Release/SpeedWheel.dll` and `lua/SpeedWheel_Core.lua`.
 
 - The wheel is a single shared per-frame delta in `PadImpl+0x48C`. The plugin
   drops notches the game used for zoom: the scope/binocular path is detected by
-  its player status bit, the iDroid map by IH's `inIdroid`. Set `gateZoom=0` in
+  its player status bit, the iDroid map by IH's `inIdroid`. Aiming a weapon keeps
+  the wheel, so speed still changes while moving and aiming. Set `gateZoom=0` in
   the ini for the old always-change-speed behavior.
 - Single-player only. Do not use on MGO/FOB — client-side speed changes are not replicated and may be treated as cheating.
 - Log: `MGS_TPP/plugins/SpeedWheel.log`.
