@@ -58,3 +58,43 @@ Keyboard input reports a force of **1.0**; `STICK_FORCE_MAX` (0.95) is only the 
 clamp of the rate curve inside `UpdateMoveSpeed`, so the scaling guard has no upper
 bound. Scaling is floored at `STICK_FORCE_MIN` so the state machine still sees
 movement input.
+
+## Shared wheel consumers
+
+`PadImpl + 0x48C` is one per-frame delta shared by every wheel consumer, so a
+notch meant for zoom would also move the speed level:
+
+| Consumer | RVA | Notes |
+|---|---|---|
+| `PadImpl::GetWheel` | `0x1205E60` | vtable-only accessor (`F3 0F 10 81 8C 04 00 00 C3`); the iDroid map/UI reads the wheel through it |
+| Wheel zoom handler | `0xB5D560` | camera/binocular zoom; invoked from `0xB5D750` when the pad wheel flag is set, handles both directions |
+| Pad wheel flags | `+0x564` | `0x80000` = wheel produced a delta, `0x100000` = negative direction |
+
+`SpeedWheel` defers each notch by one frame and drops it when either consumer
+read the wheel in that frame, so scope/binocular and map zoom never change the
+speed level. The accessor hook classifies callers: a caller that polls the
+accessor while the wheel is idle (HUD) is ignored, an on-demand caller (map/UI
+zoom) gates the notch. `gateZoom=0` restores the old behavior.
+
+## Player status bits
+
+`PlayerInfo::OrCheckStatus` (RVA `0x554520`) resolves the local player's status
+object with `0x53CA40`:
+
+```
+obj = 0x2BD0FF0 + (block * 16 + playerIndex) * 0xE0
+bits at obj + 0xC0 (256 statuses), block @ 0x2BD0FD0, playerIndex @ 0x2BD8FD4
+```
+
+Status `58` = `BINOCLE` ("using int-scope"), `10` = `GUN_READY` (aiming a
+weapon). `SpeedWheel` reads bit 58 to gate the wheel while the binoculars are
+up without blocking speed changes while merely aiming.
+
+## iDroid / map state
+
+The map zoom does **not** read `PadImpl+0x48C` through `PadImpl::GetWheel` (that
+accessor is never called by the game) and does not use the camera zoom handler,
+so it cannot be detected from the wheel side. The IH module
+(`SpeedWheel_Core.lua`) publishes IH's own `currentChecks.inIdroid` to
+`SpeedWheel.runtime` (`idroid=0|1`) only when it flips open/closed; the DLL polls
+that file every 100 ms and drops notches while it is open (`gateIdroid`).

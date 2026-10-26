@@ -81,6 +81,10 @@ bool LoadConfig(const std::string& iniPath) {
         else if (!_stricmp(key, "forceMax"))            g_cfg.forceMax = (float)atof(val);
         else if (!_stricmp(key, "requireForeground"))   g_cfg.requireForeground = ParseBool(val, g_cfg.requireForeground);
         else if (!_stricmp(key, "requireCursorHidden")) g_cfg.requireCursorHidden = ParseBool(val, g_cfg.requireCursorHidden);
+        else if (!_stricmp(key, "gateZoom"))            g_cfg.gateZoom = ParseBool(val, g_cfg.gateZoom);
+        else if (!_stricmp(key, "gateBinoc"))           g_cfg.gateBinoc = ParseBool(val, g_cfg.gateBinoc);
+        else if (!_stricmp(key, "gateIdroid"))          g_cfg.gateIdroid = ParseBool(val, g_cfg.gateIdroid);
+        else if (!_stricmp(key, "aimKey"))              g_cfg.aimKey = (int)strtol(val, nullptr, 0);
         else if (!_stricmp(key, "playerIndex"))         g_cfg.playerIndex = (int)strtol(val, nullptr, 0);
         else {
             LogWarn("config: unknown key '%s'", key);
@@ -133,6 +137,10 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
         "\n"
         "requireForeground=1\n"
         "requireCursorHidden=1    ; ignore the wheel while a menu shows the cursor\n"
+        "gateZoom=1               ; drop notches the game used for scope / iDroid map zoom\n"
+        "gateBinoc=1              ; drop notches while the binoculars / int-scope is up\n"
+        "gateIdroid=1             ; drop notches while the iDroid map is open\n"
+        "aimKey=0                 ; VK_RBUTTON: also drop while this is held (0 = off, aiming keeps working)\n"
         "\n"
         "playerIndex=-1           ; -1 = auto-detect the local player's index\n");
     fclose(f);

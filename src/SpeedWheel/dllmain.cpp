@@ -54,7 +54,7 @@ DWORD WINAPI InitThread(LPVOID) {
     }
 
     for (;;) {
-        Sleep(250);
+        Sleep(100);
         sw::SpeedTick();
     }
 }

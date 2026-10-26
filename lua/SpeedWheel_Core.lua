@@ -5,7 +5,7 @@
 -- Install: copy to MGS_TPP/mod/modules/SpeedWheel_Core.lua
 -- IH auto-loads every .lua in that folder, so no other setup is needed.
 
-local this = {}
+local this = { updateOutsideGame = true, updateRate = 0 }
 
 if rawget(_G, "SpeedWheel_Core") then
   return _G.SpeedWheel_Core
@@ -13,6 +13,8 @@ end
 
 local runtimeName = "SpeedWheel.runtime"
 local writeSeq = 0
+local idroidState = 0
+local lastIdroid = nil
 
 local function GamePath()
   local path = (InfCore and InfCore.gamePath) or (IHH and IHH.GetGamePath and IHH.GetGamePath()) or ".\\"
@@ -47,12 +49,54 @@ local function WriteRuntime()
   f:write(string.format("smooth=%.3f\n", IvarValue("sw_smooth", 0.12)))
   f:write("invert=" .. tostring(IvarValue("sw_invert", 0)) .. "\n")
   f:write("step=" .. tostring(IvarValue("sw_wheelStep", 1)) .. "\n")
+  f:write("idroid=" .. tostring(idroidState) .. "\n")
   f:close()
 end
 
 -- NOTE: no per-frame Update here. Calling io.open from the game's Lua update
 -- deadlocks on the asset/file-system lock during loading (the game hangs at the
 -- first Lua update). Writes only happen from menu callbacks, which are safe.
+--
+-- The one exception is the iDroid flag below: it is published only when the
+-- state flips (open/close), after loading, so it is one write per toggle.
+
+-- Infinite Heaven already computes the iDroid state every frame. Publish it on
+-- change so the DLL can stop the wheel from changing speed while the map is
+-- open (the map zoom does not read the pad wheel through any hookable path).
+local function CurrentIdroid(currentChecks)
+  if currentChecks and currentChecks.inIdroid ~= nil then
+    return currentChecks.inIdroid and 1 or 0
+  end
+  if InfMain and InfMain.execChecks and InfMain.execChecks.inIdroid ~= nil then
+    return InfMain.execChecks.inIdroid and 1 or 0
+  end
+  return nil
+end
+
+local reportedSource = false
+
+local function InGame(currentChecks)
+  if currentChecks and currentChecks.inGame ~= nil then return currentChecks.inGame end
+  if InfMain and InfMain.execChecks and InfMain.execChecks.inGame ~= nil then
+    return InfMain.execChecks.inGame
+  end
+  return true
+end
+
+function this.Update(currentChecks)
+  if not InGame(currentChecks) then return end
+  local idroid = CurrentIdroid(currentChecks)
+  if not reportedSource and InfCore and InfCore.Log then
+    reportedSource = true
+    InfCore.Log("SpeedWheel: idroid state " ..
+      (idroid ~= nil and "available" or "UNAVAILABLE") ..
+      " (checks=" .. tostring(currentChecks ~= nil) .. ")", false, true)
+  end
+  if idroid == nil or idroid == lastIdroid then return end
+  lastIdroid = idroid
+  idroidState = idroid
+  pcall(WriteRuntime)
+end
 
 -- ---------------------------------------------------------------------------
 -- Knobs

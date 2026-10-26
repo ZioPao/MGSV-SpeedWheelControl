@@ -41,6 +41,10 @@ Values here are defaults. Once Infinite Heaven writes `SpeedWheel.runtime`, the 
 | `smoothSeconds` | `0.12` | gait transition smoothing |
 | `forceMin` / `forceMax` | `0` | `0` = read the game's own force limits (0.1 / 0.95) |
 | `playerIndex` | `-1` | `-1` = auto-detect the local player; force a value only if the log shows the wrong index |
+| `gateZoom` | `1` | drop notches the game used for scope / iDroid map zoom |
+| `gateBinoc` | `1` | drop notches while the binoculars / int-scope is up |
+| `gateIdroid` | `1` | drop notches while the iDroid map is open (published by the IH module) |
+| `aimKey` | `0` | VK_RBUTTON: also drop while held (`0` = off, aiming a weapon keeps working) |
 | `logLevelChanges` | `1` | one log line per notch |
 | `logWheel` | `1` | log raw wheel deltas |
 | `heartbeatSeconds` | `5` | periodic state line; `0` disables |
@@ -60,6 +64,10 @@ Output: `build/Release/SpeedWheel.dll` and `lua/SpeedWheel_Core.lua`.
 
 ## Notes
 
+- The wheel is a single shared per-frame delta in `PadImpl+0x48C`, so the plugin
+  hooks the two native consumers (the scope/binocular zoom handler and the pad
+  wheel accessor used by the iDroid map/UI) and drops notches they consumed.
+  Set `gateZoom=0` in the ini if you want the old always-change-speed behavior.
 - Single-player only. Do not use on MGO/FOB — client-side speed changes are not replicated and may be treated as cheating.
 - Log: `MGS_TPP/plugins/SpeedWheel.log`.
 - Reverse-engineering notes: [`docs/MGSV_MovementSpeed_RE.md`](docs/MGSV_MovementSpeed_RE.md).

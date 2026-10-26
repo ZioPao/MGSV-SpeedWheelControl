@@ -26,6 +26,10 @@ struct Config {
 
     bool  requireForeground = true;   // ignore the wheel when the game is not focused
     bool  requireCursorHidden = true; // ignore the wheel while a menu shows the cursor
+    bool  gateZoom          = true;   // drop notches the game used for scope/map zoom
+    bool  gateBinoc         = true;   // drop notches while the binoculars/int-scope is up
+    bool  gateIdroid        = true;   // drop notches while the iDroid map is open
+    int   aimKey            = 0;      // VK_RBUTTON: wheel is zoom while this is held (0 = off)
 
     int   playerIndex       = -1;     // -1 = auto (first index seen); else force one
 };
