@@ -54,7 +54,9 @@ float    g_lastForceIn = 0.0f;
 float    g_lastForceOut = 0.0f;
 float    g_lastWheel = 0.0f;
 unsigned g_lastFlags = 0;
+unsigned g_lastFlags2 = 0;
 unsigned g_lastStance = 0;
+bool     g_walkPrev = false;
 
 volatile LONG g_frames = 0;
 volatile LONG g_applyCount = 0;
@@ -411,6 +413,21 @@ void __fastcall UpdateMoveForceByPadHook(void* self, unsigned playerIndex, void*
             g_lastLocalSeen = now;
         }
     }
+
+    // The walk key (whatever it is bound to in-game) doubles as the reset key.
+    // The game evaluates the binding into Work+0x2B0 bit 0x100 every frame, so a
+    // rising edge is one press. Reading the game's own state keeps this free of
+    // any key configuration and follows rebinds automatically.
+    unsigned flags2 = 0;
+    if (SafeRead(workAddr + offsets::kWorkFlags2, flags2)) {
+        g_lastFlags2 = flags2;
+        const bool walk = (flags2 & offsets::kWorkFlagWalk) != 0;
+        if (walk && !g_walkPrev && GameplayInputAllowed()) {
+            SetLevel(g_cfg.defaultLevel, "walk key reset");
+        }
+        g_walkPrev = walk;
+    }
+
     if (!g_cfg.enabled) return;
 
     float force = 0.0f;
@@ -592,9 +609,10 @@ void SpeedTick() {
         LogWarn("hook installed but no PadImpl::Update frames yet (still loading, or not in gameplay)");
         return;
     }
-    LogBeat("level %d/%d mul %.2f (cur %.2f) force %.3f->%.3f stance %u flags 0x%X wheel %.2f frames %ld applies %ld",
+    LogBeat("level %d/%d mul %.2f (cur %.2f) force %.3f->%.3f stance %u flags 0x%X walk %u wheel %.2f frames %ld applies %ld",
             g_level + 1, (int)g_cfg.levels.size(), g_targetMul, g_currentMul,
-            g_lastForceIn, g_lastForceOut, g_lastStance, g_lastFlags, g_lastWheel,
+            g_lastForceIn, g_lastForceOut, g_lastStance, g_lastFlags,
+            (g_lastFlags2 & offsets::kWorkFlagWalk) ? 1u : 0u, g_lastWheel,
             (long)g_frames, (long)g_applyCount);
 }
 

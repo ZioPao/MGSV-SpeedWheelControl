@@ -59,6 +59,22 @@ clamp of the rate curve inside `UpdateMoveSpeed`, so the scaling guard has no up
 bound. Scaling is floored at `STICK_FORCE_MIN` so the state machine still sees
 movement input.
 
+## Walk key (reset trigger)
+
+`Work + 0x2B0` bit `0x100` is the walk-pace state:
+
+- `UpdateMoveForceByPad` (rva `0x10BCD90`) sets it every frame from pad button
+  `0x19` when the pad is valid, and clears it when the button is not down
+  (`0x10BCF76` / `0x10BCF82`). That button is the in-game walk binding, so the
+  plugin never needs a key code and rebinds work untouched.
+- `GetMoveForceLimit` (rva `0x109F6F0`) tests the bit and clamps the move force
+  to `STICK_FORCE_MIN` while it is set — the reason keyboard walking is so slow.
+- `Work + 0x2FC` is a separate stand-speed limit (`SetStandMoveSpeedLimit`); it
+  defaults to `-1` and is unrelated to this flag.
+
+The plugin exposes the flag as the reset input: a rising edge sets the speed
+level back to `defaultLevel`.
+
 ## Wheel ownership
 
 `PadImpl + 0x48C` is one per-frame delta shared by every wheel consumer, so a

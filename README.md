@@ -6,6 +6,10 @@ Dynamic on-foot movement speed for **Metal Gear Solid V: The Phantom Pain** (1.0
 
 - **Wheel up** = faster, **wheel down** = slower.
 
+- **Walk key** = reset to the default speed. The plugin reads the game's own
+  walk state (`Work + 0x2B0` bit `0x100`), so it follows whatever key the
+  in-game binding uses — nothing to configure.
+
 - **Knobs live in Infinite Heaven's menu** (F3 → *Speed Wheel Control*).
 
 ## Requirements
@@ -64,6 +68,10 @@ Output: `build/Release/SpeedWheel.dll` and `lua/SpeedWheel_Core.lua`.
   drops notches the game used for zoom: the scope/binocular path is detected by
   its player status bit, the iDroid map by IH's `inIdroid`. Aiming a weapon keeps
   the wheel, so speed still changes while moving and aiming.
+- The walk key resets to `defaultLevel` (top speed by default). It is not a
+  configured hotkey: the game's own walk flag is read every frame, so rebinding
+  the key in-game works without touching the ini. Holding the key still walks
+  natively, since it remains the walk binding.
 - Single-player only. Do not use on MGO/FOB — client-side speed changes are not replicated and may be treated as cheating.
 - Log: `MGS_TPP/plugins/SpeedWheel.log`.
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md).

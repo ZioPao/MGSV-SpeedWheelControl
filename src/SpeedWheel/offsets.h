@@ -44,6 +44,15 @@ constexpr uint32_t  kWorkFlagDash   = 0x20;   // dash / sprint active
 constexpr uintptr_t kWorkStance     = 0x2A2;  // byte: 1 = stand, 2 = squat, 3 = crawl
 constexpr uintptr_t kWorkDeltaTime  = 0x2B8;  // float, frame delta seconds
 
+// Second flag word. Bit 0x100 is the walk-pace state (the game's "walk" binding,
+// whatever key it is bound to). UpdateMoveForceByPad writes it every frame from
+// pad button 0x19 (set while the button is down, cleared when it is not), and
+// GetMoveForceLimit (rva 0x109F6F0) clamps the move force to STICK_FORCE_MIN
+// while it is set. The speed wheel uses it as its reset key: no VK polling, so
+// rebinding the walk key in-game is picked up automatically.
+constexpr uintptr_t kWorkFlags2     = 0x2B0;  // uint32
+constexpr uint32_t  kWorkFlagWalk   = 0x00000100;
+
 // ---------------------------------------------------------------------------
 // PadImpl (retail layout, unchanged from the debug build)
 // ---------------------------------------------------------------------------
