@@ -66,4 +66,11 @@ std::string GetGameDir() {
     return Narrow(ws.substr(0, pos));
 }
 
+double NowSeconds() {
+    static LARGE_INTEGER freq = [] { LARGE_INTEGER f{}; QueryPerformanceFrequency(&f); return f; }();
+    LARGE_INTEGER c{};
+    QueryPerformanceCounter(&c);
+    return (double)c.QuadPart / (double)freq.QuadPart;
+}
+
 } // namespace sw

@@ -8,12 +8,12 @@
 
 #include "common.h"
 #include "config.h"
+#include "gate.h"
 #include "logger.h"
 #include "offsets.h"
 #include "scanner.h"
 
 #include <windows.h>
-#include <intrin.h>
 #include <MinHook.h>
 
 #include <cmath>
@@ -29,18 +29,12 @@ namespace {
 
 using PadUpdateFn = void(__fastcall*)(void* self);
 using UpdateMoveForceByPadFn = void(__fastcall*)(void* self, unsigned playerIndex, void* work);
-using PadWheelGetterFn = float(__fastcall*)(void* self);
-using ZoomWheelHandlerFn = void(__fastcall*)(void* self, unsigned playerIndex, void* pad);
 
 PadUpdateFn g_origPadUpdate = nullptr;
 UpdateMoveForceByPadFn g_origMoveForce = nullptr;
-PadWheelGetterFn g_origPadWheelGetter = nullptr;
-ZoomWheelHandlerFn g_origZoomWheel = nullptr;
 
 uintptr_t g_padUpdateTarget = 0;
 uintptr_t g_moveForceTarget = 0;
-uintptr_t g_padWheelGetterTarget = 0;
-uintptr_t g_zoomWheelTarget = 0;
 
 int   g_level = 7;
 float g_targetMul = 1.0f;
@@ -48,28 +42,10 @@ float g_currentMul = 1.0f;
 float g_wheelAccum = 0.0f;
 float g_lastRawWheel = 0.0f;
 
-// Zoom gating: the wheel delta in PadImpl+0x48C is shared by every consumer.
-// A notch is held for one frame so the game's own zoom/UI readers can tag it
-// first; tagged notches are dropped instead of moving the speed level.
-double      g_lastZoomUse = 0.0;
-const char* g_lastZoomWhy = "zoom";
-float       g_pendingWheel = 0.0f;
-double      g_pendingWheelAt = 0.0;
-unsigned    g_pendingPadFlags = 0;
-int         g_pendingBinoc = 0;
-volatile LONG g_idroidOpen = 0;  // published by the IH Lua module (SpeedWheel.runtime)
-double      g_lastGateLog = 0.0;
-double      g_lastReaderLog = 0.0;
-
-// Per-caller stats for the pad wheel accessor. A caller that also polls the
-// accessor while the wheel is idle (the HUD) must not gate speed changes; an
-// on-demand reader (map/UI zoom) does.
-struct WheelReader {
-    uintptr_t caller = 0;
-    unsigned  calls = 0;
-    unsigned  nonZero = 0;
-};
-WheelReader g_wheelReaders[16];
+// A notch is held for one frame so the gate can see what the game did with it.
+float    g_pendingWheel = 0.0f;
+double   g_pendingWheelAt = 0.0;
+unsigned g_pendingPadFlags = 0;
 
 float g_forceMin = offsets::kStickForceMinDefault;
 float g_forceMax = offsets::kStickForceMaxDefault;
@@ -88,35 +64,6 @@ double g_lastSmoothTime = 0.0;
 double g_lastHeartbeat = 0.0;
 double g_lastWheelLog = 0.0;
 unsigned g_nonLocalSeen = 0;
-
-double NowSeconds() {
-    static LARGE_INTEGER freq = [] { LARGE_INTEGER f{}; QueryPerformanceFrequency(&f); return f; }();
-    LARGE_INTEGER c{};
-    QueryPerformanceCounter(&c);
-    return (double)c.QuadPart / (double)freq.QuadPart;
-}
-
-template <typename T>
-bool SafeRead(uintptr_t addr, T& out) {
-    if (!addr) return false;
-    __try {
-        out = *reinterpret_cast<const T*>(addr);
-        return true;
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
-        return false;
-    }
-}
-
-template <typename T>
-bool SafeWrite(uintptr_t addr, const T& value) {
-    if (!addr) return false;
-    __try {
-        *reinterpret_cast<T*>(addr) = value;
-        return true;
-    } __except (EXCEPTION_EXECUTE_HANDLER) {
-        return false;
-    }
-}
 
 bool ForegroundIsGame() {
     HWND fg = GetForegroundWindow();
@@ -212,8 +159,8 @@ void ProcessWheel(float raw) {
         const double now = NowSeconds();
         if (now - g_lastWheelLog > 0.02) {
             g_lastWheelLog = now;
-            LogInfo("wheel raw %.3f (pad 0x%X work 0x%X binoc %d)", raw, g_pendingPadFlags,
-                    g_lastFlags, g_pendingBinoc);
+            LogInfo("wheel raw %.3f (pad 0x%X work 0x%X)", raw, g_pendingPadFlags,
+                    g_lastFlags);
         }
     }
 
@@ -344,11 +291,7 @@ void PollRuntimeFile() {
             LogInfo("IH menu: invert %s", i ? "ON" : "OFF");
         }
     }
-    if (idroid >= 0 && idroid != (int)g_idroidOpen) {
-        g_idroidOpen = idroid;
-        LogInfo("iDroid %s - speed wheel %s", idroid ? "OPEN" : "closed",
-                idroid ? "paused" : "active");
-    }
+    if (idroid >= 0) SetIdroidOpen(idroid != 0);
 }
 
 void CheckHotkeys() {
@@ -372,115 +315,6 @@ void CheckHotkeys() {
     lastF8 = f8;
 }
 
-// The game shares PadImpl+0x48C between every wheel consumer. These hooks only
-// record that a consumer used the wheel this frame; the notch is dropped later.
-void StampWheelUse(const char* why) {
-    g_lastZoomUse = NowSeconds();
-    g_lastZoomWhy = why;
-}
-
-// Binoculars and scopes zoom with the wheel while the aim button is held, and
-// that path does not read the pad wheel through any hookable accessor.
-bool AimHeld() {
-    if (g_cfg.aimKey <= 0) return false;
-    return (GetAsyncKeyState(g_cfg.aimKey) & 0x8000) != 0;
-}
-
-// Reads the local player's status bits (the same table PlayerInfo.OrCheckStatus
-// uses). BINOCLE is set only while the binoculars/int-scope is up, so the wheel
-// stays a speed control while merely aiming a weapon.
-bool PlayerStatusActive(unsigned status) {
-    if (!g_base) return false;
-    int block = 0;
-    int index = 0;
-    if (!SafeRead<int>(g_base + offsets::kStatusBlockRva, block)) return false;
-    if (!SafeRead<int>(g_base + offsets::kStatusIndexRva, index)) return false;
-    if (block < 0 || block > 1) return false;
-    if (index < 0 || index >= 16) return false;
-
-    const uintptr_t obj = g_base + offsets::kStatusBaseRva +
-                          (uintptr_t)(block * 16 + index) * offsets::kStatusStride;
-    uint32_t word = 0;
-    if (!SafeRead<uint32_t>(obj + offsets::kStatusBits + (status >> 5) * 4, word)) return false;
-    return ((word >> (status & 31)) & 1u) != 0;
-}
-
-bool BinocularsUp() {
-    return g_cfg.gateBinoc && PlayerStatusActive(offsets::kStatusBinocle);
-}
-
-void NoteWheelReader(uintptr_t caller, bool nonZero) {
-    for (auto& r : g_wheelReaders) {
-        if (r.caller == caller) {
-            ++r.calls;
-            if (nonZero) ++r.nonZero;
-            return;
-        }
-    }
-    for (auto& r : g_wheelReaders) {
-        if (r.caller == 0) {
-            r.caller = caller;
-            r.calls = 1;
-            r.nonZero = nonZero ? 1u : 0u;
-            return;
-        }
-    }
-}
-
-// An on-demand reader only calls the accessor when the wheel actually moved
-// (map/UI zoom). Kept for diagnostics only: any non-zero read means the game
-// consumed the wheel, so the notch is dropped.
-bool ReaderIsOnDemand(uintptr_t caller) {
-    for (const auto& r : g_wheelReaders) {
-        if (r.caller != caller) continue;
-        if (r.calls < 24) return true;
-        return static_cast<uint64_t>(r.nonZero) * 100u >= static_cast<uint64_t>(r.calls) * 25u;
-    }
-    return true;
-}
-
-void MaybeLogWheelReaders() {
-    if (!g_cfg.logWheel) return;
-    const double now = NowSeconds();
-    if (now - g_lastReaderLog < 5.0) return;
-    bool any = false;
-    for (const auto& r : g_wheelReaders) {
-        if (r.caller) { any = true; break; }
-    }
-    if (!any) return;
-    g_lastReaderLog = now;
-    for (const auto& r : g_wheelReaders) {
-        if (!r.caller) continue;
-        LogInfo("wheel reader rva 0x%llX: %u calls, %u with wheel (%s)",
-                (unsigned long long)(r.caller - g_base), r.calls, r.nonZero,
-                ReaderIsOnDemand(r.caller) ? "on demand" : "polls");
-    }
-}
-
-float __fastcall PadWheelGetterHook(void* self) {
-    const float value = g_origPadWheelGetter ? g_origPadWheelGetter(self) : 0.0f;
-    if (g_cfg.gateZoom) {
-        const uintptr_t caller = reinterpret_cast<uintptr_t>(_ReturnAddress());
-        const bool nonZero = value != 0.0f;
-        NoteWheelReader(caller, nonZero);
-        // Any consumer that asks for the wheel owns this notch, including the
-        // iDroid map UI, which polls the accessor while the map is open.
-        if (nonZero) StampWheelUse("pad wheel read");
-    }
-    return value;
-}
-
-void __fastcall ZoomWheelHandlerHook(void* self, unsigned playerIndex, void* pad) {
-    if (g_cfg.gateZoom && pad) {
-        unsigned flags = 0;
-        if (SafeRead(reinterpret_cast<uintptr_t>(pad) + offsets::kPadInputFlags, flags) &&
-            (flags & offsets::kPadFlagWheelActive)) {
-            StampWheelUse("camera zoom");
-        }
-    }
-    g_origZoomWheel(self, playerIndex, pad);
-}
-
 // Apply the previous frame's notch unless the game used the wheel for zoom.
 // One frame of latency (~16 ms) lets the game's own readers run first.
 void FlushPendingWheel(double now) {
@@ -490,34 +324,18 @@ void FlushPendingWheel(double now) {
     const float wheel = g_pendingWheel;
     g_pendingWheel = 0.0f;
 
-    if (g_cfg.gateZoom) {
-        const bool tagged = g_lastZoomUse > 0.0 && (now - g_lastZoomUse) <= 0.06;
-        const bool aiming = AimHeld();
-        const bool binoculars = BinocularsUp();
-        const bool idroid = g_cfg.gateIdroid && g_idroidOpen != 0;
-        if (tagged || aiming || binoculars || idroid) {
-            g_wheelAccum = 0.0f;
-            if (g_cfg.logWheel) {
-                static double loggedAt = 0.0;
-                if (now - loggedAt > 0.5) {
-                    loggedAt = now;
-                    if (idroid) {
-                        LogInfo("wheel %.2f ignored (iDroid map open)", wheel);
-                    } else if (binoculars) {
-                        LogInfo("wheel %.2f ignored (binoculars up, pad flags 0x%X, work flags 0x%X)",
-                                wheel, g_pendingPadFlags, g_lastFlags);
-                    } else if (aiming) {
-                        LogInfo("wheel %.2f ignored (aim held, pad flags 0x%X, work flags 0x%X)", wheel,
-                                g_pendingPadFlags, g_lastFlags);
-                    } else {
-                        LogInfo("wheel %.2f ignored (%s %.0f ms ago, pad flags 0x%X, work flags 0x%X)", wheel,
-                                g_lastZoomWhy, (now - g_lastZoomUse) * 1000.0,
-                                g_pendingPadFlags, g_lastFlags);
-                    }
-                }
+    const WheelGate gate = WheelGateReason(now);
+    if (gate != WheelGate::None) {
+        g_wheelAccum = 0.0f;
+        if (g_cfg.logWheel) {
+            static double loggedAt = 0.0;
+            if (now - loggedAt > 0.5) {
+                loggedAt = now;
+                LogInfo("wheel %.2f ignored (%s, pad flags 0x%X, work flags 0x%X)",
+                        wheel, WheelGateName(gate), g_pendingPadFlags, g_lastFlags);
             }
-            return;
         }
+        return;
     }
     ProcessWheel(wheel);
 }
@@ -547,14 +365,13 @@ void __fastcall PadUpdateHook(void* self) {
     if (!SafeRead(reinterpret_cast<uintptr_t>(self) + offsets::kPadWheel, wheel)) return;
 
     FlushPendingWheel(now);
-    MaybeLogWheelReaders();
+    WheelGateTick();
     if (wheel != 0.0f) {
         g_pendingWheel = wheel;
         g_pendingWheelAt = now;
         unsigned flags = 0;
         SafeRead(reinterpret_cast<uintptr_t>(self) + offsets::kPadInputFlags, flags);
         g_pendingPadFlags = flags;
-        g_pendingBinoc = BinocularsUp() ? 1 : 0;
     }
 }
 
@@ -705,11 +522,13 @@ bool InstallSpeedHook() {
 
     // Optional: wheel consumers used for scope/map zoom. Missing hooks only
     // cost the zoom gate, never the speed system itself.
+    uintptr_t wheelGetterTarget = 0;
+    uintptr_t zoomHandlerTarget = 0;
     if (g_cfg.gateZoom) {
-        g_padWheelGetterTarget = ResolveTarget(codeStart, codeSize, "PadImpl::GetWheel",
-                                               offsets::kPadWheelGetterRva,
-                                               offsets::kPadWheelGetterPat);
-        g_zoomWheelTarget = ResolveTarget(codeStart, codeSize, "ZoomWheelHandler",
+        wheelGetterTarget = ResolveTarget(codeStart, codeSize, "PadImpl::GetWheel",
+                                          offsets::kPadWheelGetterRva,
+                                          offsets::kPadWheelGetterPat);
+        zoomHandlerTarget = ResolveTarget(codeStart, codeSize, "ZoomWheelHandler",
                                           offsets::kZoomWheelHandlerRva,
                                           offsets::kZoomWheelHandlerPat);
     }
@@ -756,29 +575,7 @@ bool InstallSpeedHook() {
         return false;
     }
 
-    if (g_padWheelGetterTarget &&
-        MH_CreateHook(reinterpret_cast<LPVOID>(g_padWheelGetterTarget),
-                      reinterpret_cast<LPVOID>(&PadWheelGetterHook),
-                      reinterpret_cast<LPVOID*>(&g_origPadWheelGetter)) == MH_OK &&
-        MH_EnableHook(reinterpret_cast<LPVOID>(g_padWheelGetterTarget)) == MH_OK) {
-        LogInfo("hooked PadImpl::GetWheel @ 0x%llX (zoom gate)",
-                (unsigned long long)g_padWheelGetterTarget);
-    } else {
-        LogWarn("PadImpl::GetWheel hook failed - UI wheel reads are not gated");
-        g_padWheelGetterTarget = 0;
-    }
-
-    if (g_zoomWheelTarget &&
-        MH_CreateHook(reinterpret_cast<LPVOID>(g_zoomWheelTarget),
-                      reinterpret_cast<LPVOID>(&ZoomWheelHandlerHook),
-                      reinterpret_cast<LPVOID*>(&g_origZoomWheel)) == MH_OK &&
-        MH_EnableHook(reinterpret_cast<LPVOID>(g_zoomWheelTarget)) == MH_OK) {
-        LogInfo("hooked ZoomWheelHandler @ 0x%llX (zoom gate)",
-                (unsigned long long)g_zoomWheelTarget);
-    } else {
-        LogWarn("ZoomWheelHandler hook failed - scope zoom still moves the speed level");
-        g_zoomWheelTarget = 0;
-    }
+    InstallWheelGate(wheelGetterTarget, zoomHandlerTarget);
 
     LogInfo("hooked PadImpl::Update @ 0x%llX (wheel +0x%X)",
             (unsigned long long)g_padUpdateTarget, (unsigned)offsets::kPadWheel);
@@ -787,11 +584,6 @@ bool InstallSpeedHook() {
             g_forceMin, g_forceMax);
     LogInfo("speed levels: %d, default %d, smooth %.2fs, top speed = vanilla run",
             (int)g_cfg.levels.size(), g_level + 1, g_cfg.smoothSeconds);
-    LogInfo("zoom gate: %s (wheel accessor %s, camera zoom %s, binocular status %s)",
-            g_cfg.gateZoom ? "on" : "off",
-            g_padWheelGetterTarget ? "hooked" : "missing",
-            g_zoomWheelTarget ? "hooked" : "missing",
-            g_cfg.gateBinoc ? "on" : "off");
     LogLevel("initial level");
     return true;
 }

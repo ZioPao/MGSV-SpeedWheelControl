@@ -22,6 +22,7 @@ configure_file(
 add_library(SpeedWheel SHARED
     dllmain.cpp
     speed.cpp
+    gate.cpp
     config.cpp
     logger.cpp
     common.cpp
