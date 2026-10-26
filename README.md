@@ -66,4 +66,5 @@ Output: `build/Release/SpeedWheel.dll` and `lua/SpeedWheel_Core.lua`.
   the wheel, so speed still changes while moving and aiming.
 - Single-player only. Do not use on MGO/FOB — client-side speed changes are not replicated and may be treated as cheating.
 - Log: `MGS_TPP/plugins/SpeedWheel.log`.
+- Changelog: [`CHANGELOG.md`](CHANGELOG.md).
 - Reverse-engineering notes: [`docs/MGSV_MovementSpeed_RE.md`](docs/MGSV_MovementSpeed_RE.md).
