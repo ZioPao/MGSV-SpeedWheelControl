@@ -11,7 +11,6 @@
 #include "gate.h"
 
 #include "common.h"
-#include "config.h"
 #include "logger.h"
 #include "offsets.h"
 
@@ -53,7 +52,7 @@ bool BinocularsUp() {
 }
 
 void __fastcall ZoomWheelHandlerHook(void* self, unsigned playerIndex, void* pad) {
-    if (g_cfg.gateZoom && pad) {
+    if (pad) {
         unsigned flags = 0;
         if (SafeRead(reinterpret_cast<uintptr_t>(pad) + offsets::kPadInputFlags, flags) &&
             (flags & offsets::kPadFlagWheelActive)) {
@@ -79,11 +78,8 @@ void InstallWheelGate(uintptr_t zoomHandler) {
         LogWarn("ZoomWheelHandler hook failed - scope zoom is not gated");
     }
 
-    LogInfo("wheel gate: %s (camera zoom %s, binoculars %s, iDroid %s)",
-            g_cfg.gateZoom ? "on" : "off",
-            zoomHooked ? "hooked" : "off",
-            g_cfg.gateBinoc ? "on" : "off",
-            g_cfg.gateIdroid ? "on" : "off");
+    LogInfo("wheel gate: camera zoom %s, binoculars on, iDroid on",
+            zoomHooked ? "hooked" : "off");
 }
 
 void SetIdroidOpen(bool open) {
@@ -95,9 +91,8 @@ void SetIdroidOpen(bool open) {
 }
 
 WheelGate WheelGateReason(double now) {
-    if (!g_cfg.gateZoom) return WheelGate::None;
-    if (g_cfg.gateIdroid && g_idroidOpen != 0) return WheelGate::Idroid;
-    if (g_cfg.gateBinoc && BinocularsUp()) return WheelGate::Binoculars;
+    if (g_idroidOpen != 0) return WheelGate::Idroid;
+    if (BinocularsUp()) return WheelGate::Binoculars;
     if (g_lastZoomUse > 0.0 && (now - g_lastZoomUse) <= 0.06) return WheelGate::CameraZoom;
     return WheelGate::None;
 }

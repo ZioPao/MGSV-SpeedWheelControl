@@ -75,7 +75,6 @@ not hooked.
 `SpeedWheel` defers each notch by one frame and drops it when the zoom handler
 read the wheel in that frame; the scope/binocular path is additionally gated by
 the player status bit `BINOCLE` (58) and the iDroid map by IH's `inIdroid`.
-`gateZoom=0` restores the old behavior.
 
 ## Player status bits
 
@@ -98,4 +97,4 @@ accessor is never called by the game) and does not use the camera zoom handler,
 so it cannot be detected from the wheel side. The IH module
 (`SpeedWheel_Core.lua`) publishes IH's own `currentChecks.inIdroid` to
 `SpeedWheel.runtime` (`idroid=0|1`) only when it flips open/closed; the DLL polls
-that file every 100 ms and drops notches while it is open (`gateIdroid`).
+that file every 100 ms and drops notches while it is open.

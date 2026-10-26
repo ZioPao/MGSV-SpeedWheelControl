@@ -38,9 +38,6 @@ Values here are defaults. Once Infinite Heaven writes `SpeedWheel.runtime`, the 
 | `smoothSeconds` | `0.12` | gait transition smoothing |
 | `forceMin` / `forceMax` | `0` | `0` = read the game's own force limits (0.1 / 0.95) |
 | `playerIndex` | `-1` | `-1` = auto-detect the local player; force a value only if the log shows the wrong index |
-| `gateZoom` | `1` | master switch for the wheel-ownership gates |
-| `gateBinoc` | `1` | drop notches while the binoculars / int-scope is up |
-| `gateIdroid` | `1` | drop notches while the iDroid map is open (published by the IH module) |
 | `requireForeground` | `1` | ignore the wheel when the game is not focused |
 | `requireCursorHidden` | `1` | ignore the wheel while a menu shows the cursor |
 | `logLevelChanges` | `1` | one log line per notch |
@@ -66,8 +63,7 @@ Output: `build/Release/SpeedWheel.dll` and `lua/SpeedWheel_Core.lua`.
 - The wheel is a single shared per-frame delta in `PadImpl+0x48C`. The plugin
   drops notches the game used for zoom: the scope/binocular path is detected by
   its player status bit, the iDroid map by IH's `inIdroid`. Aiming a weapon keeps
-  the wheel, so speed still changes while moving and aiming. Set `gateZoom=0` in
-  the ini for the old always-change-speed behavior.
+  the wheel, so speed still changes while moving and aiming.
 - Single-player only. Do not use on MGO/FOB — client-side speed changes are not replicated and may be treated as cheating.
 - Log: `MGS_TPP/plugins/SpeedWheel.log`.
 - Reverse-engineering notes: [`docs/MGSV_MovementSpeed_RE.md`](docs/MGSV_MovementSpeed_RE.md).

@@ -519,14 +519,11 @@ bool InstallSpeedHook() {
                                       offsets::kUpdateMoveForceByPadPat);
     if (!g_padUpdateTarget || !g_moveForceTarget) return false;
 
-    // Optional: the native camera zoom consumer. A pattern miss only costs the
-    // zoom gate, never the speed system itself.
-    uintptr_t zoomHandlerTarget = 0;
-    if (g_cfg.gateZoom) {
-        zoomHandlerTarget = ResolveTarget(codeStart, codeSize, "ZoomWheelHandler",
-                                          offsets::kZoomWheelHandlerRva,
-                                          offsets::kZoomWheelHandlerPat);
-    }
+    // The native camera zoom consumer. A pattern miss only costs the zoom gate,
+    // never the speed system itself.
+    const uintptr_t zoomHandlerTarget = ResolveTarget(codeStart, codeSize, "ZoomWheelHandler",
+                                                     offsets::kZoomWheelHandlerRva,
+                                                     offsets::kZoomWheelHandlerPat);
 
     ReadForceLimits();
     if (g_cfg.levels.empty()) {
