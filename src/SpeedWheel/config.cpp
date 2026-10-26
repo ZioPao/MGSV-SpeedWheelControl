@@ -136,7 +136,7 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
         "\n"
         "requireForeground=1\n"
         "requireCursorHidden=1    ; ignore the wheel while a menu shows the cursor\n"
-        "gateZoom=1               ; drop notches the game used for scope / iDroid map zoom\n"
+        "gateZoom=1               ; master switch for the wheel-ownership gates\n"
         "gateBinoc=1              ; drop notches while the binoculars / int-scope is up\n"
         "gateIdroid=1             ; drop notches while the iDroid map is open\n"
         "\n"

@@ -41,7 +41,7 @@ Values here are defaults. Once Infinite Heaven writes `SpeedWheel.runtime`, the 
 | `smoothSeconds` | `0.12` | gait transition smoothing |
 | `forceMin` / `forceMax` | `0` | `0` = read the game's own force limits (0.1 / 0.95) |
 | `playerIndex` | `-1` | `-1` = auto-detect the local player; force a value only if the log shows the wrong index |
-| `gateZoom` | `1` | drop notches the game used for scope / iDroid map zoom |
+| `gateZoom` | `1` | master switch for the wheel-ownership gates |
 | `gateBinoc` | `1` | drop notches while the binoculars / int-scope is up |
 | `gateIdroid` | `1` | drop notches while the iDroid map is open (published by the IH module) |
 | `logLevelChanges` | `1` | one log line per notch |

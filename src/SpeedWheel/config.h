@@ -26,7 +26,7 @@ struct Config {
 
     bool  requireForeground = true;   // ignore the wheel when the game is not focused
     bool  requireCursorHidden = true; // ignore the wheel while a menu shows the cursor
-    bool  gateZoom          = true;   // drop notches the game used for scope/map zoom
+    bool  gateZoom          = true;   // master switch for the wheel-ownership gates
     bool  gateBinoc         = true;   // drop notches while the binoculars/int-scope is up
     bool  gateIdroid        = true;   // drop notches while the iDroid map is open
 
