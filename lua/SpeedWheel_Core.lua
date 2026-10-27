@@ -46,7 +46,7 @@ local function WriteRuntime()
   f:write(string.format("smooth=%.3f\n", IvarValue("sw_smooth", 0.12)))
   f:write("invert=" .. tostring(IvarValue("sw_invert", 0)) .. "\n")
   f:write("step=" .. tostring(IvarValue("sw_wheelStep", 1)) .. "\n")
-  f:write("walkKey=" .. tostring(IvarValue("sw_walkKey", 1)) .. "\n")
+  f:write("walkKey=" .. tostring(IvarValue("sw_walkKey", 2)) .. "\n")
   f:write("idroid=" .. tostring(idroidState) .. "\n")
   f:close()
 end
@@ -152,7 +152,7 @@ this.sw_walkKey = {
   description = "Walk key",
   inMission = true,
   save = IvarProc.CATEGORY_EXTERNAL,
-  default = 1,
+  default = 2,
   range = { min = 0, max = 2, increment = 1 },
   OnChange = OnChange,
   GetSettingText = function(self, setting)

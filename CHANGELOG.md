@@ -5,8 +5,8 @@
 The walk key is now your reset key.
 
 - Tap the walk key to snap back to normal running speed. No wheel scrolling.
-- New **Walk key** knob (F3 → *Speed Wheel Control*): `Off`, `Reset, no walk`
-  (default), or `Reset + walk`.
+- New **Walk key** knob (F3 → *Speed Wheel Control*): `Reset + walk` (default),
+  `Reset, no walk`, or `Off`.
 - Uses whatever key you bound to walk in-game. Nothing to configure.
 
 ## 1.1.0 — 2026-10-26
