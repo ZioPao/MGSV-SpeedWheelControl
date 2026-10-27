@@ -126,7 +126,7 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
         "invertWheel=0            ; 1 = wheel up slows down\n"
         "wheelStep=1              ; levels moved per wheel notch (1..3)\n"
         "defaultLevel=7           ; index into levels (7 = vanilla run)\n"
-        "walkKey=1                ; walk key: 0 off, 1 reset + no walk, 2 reset + walk\n"
+        "walkKey=2                ; walk key: 0 off, 1 reset + no walk, 2 reset + walk\n"
         "\n"
         "; target move-speed rate per notch (0..1), 1.0 = vanilla run\n"
         "levels=0.10,0.23,0.36,0.49,0.62,0.75,0.88,1.00\n"

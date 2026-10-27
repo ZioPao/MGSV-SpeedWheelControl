@@ -18,7 +18,7 @@ struct Config {
 
     // Walk key behaviour (the game's own walk binding, read from Work+0x2B0).
     // 0 = off (native walk, no reset), 1 = reset speed + no walk, 2 = reset + walk
-    int   walkKey           = 1;
+    int   walkKey           = 2;
 
     // Each entry is a target move-speed *rate* (0..1) mapped through the game's
     // own force curve. 1.0 = vanilla keyboard run, lower = slower.

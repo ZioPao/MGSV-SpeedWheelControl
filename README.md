@@ -6,10 +6,10 @@ Dynamic on-foot movement speed for **Metal Gear Solid V: The Phantom Pain** (1.0
 
 - **Wheel up** = faster, **wheel down** = slower.
 
-- **Walk key** = reset to the default speed, and (by default) no longer walks.
-  The plugin reads the game's own walk state (`Work + 0x2B0` bit `0x100`), so it
-  follows whatever key the in-game binding uses. Behaviour is a knob: *Off*,
-  *Reset, no walk*, *Reset + walk*.
+- **Walk key** = reset to the default speed. The plugin reads the game's own walk
+  state (`Work + 0x2B0` bit `0x100`), so it follows whatever key the in-game
+  binding uses. Behaviour is a knob: *Reset + walk* (default), *Reset, no walk*,
+  *Off*.
 
 - **Knobs live in Infinite Heaven's menu** (F3 → *Speed Wheel Control*).
 
@@ -27,7 +27,7 @@ Dynamic on-foot movement speed for **Metal Gear Solid V: The Phantom Pain** (1.0
 | Wheel step | levels moved per wheel notch (1–3) |
 | Transition smoothing | gait blend time when changing level (0–0.5 s) |
 | Invert wheel | wheel up = slower |
-| Walk key | `Off` keeps native walking, `Reset, no walk` uses the walk key as a reset and stops the walk clamp, `Reset + walk` resets and still walks |
+| Walk key | `Reset + walk` keeps the native walk pace, `Reset, no walk` uses the key purely as a reset, `Off` disables the reset |
 
 ## Config (`SpeedWheel.ini`)
 
@@ -39,7 +39,7 @@ Values here are defaults. Once Infinite Heaven writes `SpeedWheel.runtime`, the 
 | `hotkeyEnabled` | `1` | F7 = toggle, F8 = reset to top speed |
 | `levels` | `0.10,0.23,...,1.00` | target move-speed rate per notch; `1.0` = vanilla run |
 | `defaultLevel` | `7` | index of the starting notch (7 = top speed) |
-| `walkKey` | `1` | walk key: `0` off (native walk), `1` reset + no walk, `2` reset + walk |
+| `walkKey` | `2` | walk key: `0` off (native walk), `1` reset + no walk, `2` reset + walk |
 | `invertWheel` | `0` | `1` = wheel up slows down |
 | `wheelStep` | `1` | levels moved per wheel notch (1–3) |
 | `smoothSeconds` | `0.12` | gait transition smoothing |
@@ -76,7 +76,8 @@ Output: `build/Release/SpeedWheel.dll` and `lua/SpeedWheel_Core.lua`.
   the key in-game works without touching the ini.
 - `walkKey` picks what the key does: `0` = native walk only, `1` = reset and no
   walking (the plugin masks the walk clamp in `GetMoveForceLimit` for that
-  frame), `2` = reset and native walk. Same setting in F3 → *Speed Wheel Control*.
+  frame), `2` = reset and native walk (default). Same setting in F3 →
+  *Speed Wheel Control*.
 - Single-player only. Do not use on MGO/FOB — client-side speed changes are not replicated and may be treated as cheating.
 - Log: `MGS_TPP/plugins/SpeedWheel.log`.
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md).
