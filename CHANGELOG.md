@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 — 2026-10-27
+
+The walk key is now your reset key.
+
+- Tap the walk key to snap back to normal running speed. No wheel scrolling.
+- New **Walk key** knob (F3 → *Speed Wheel Control*): `Off`, `Reset, no walk`
+  (default), or `Reset + walk`.
+- Uses whatever key you bound to walk in-game. Nothing to configure.
+
 ## 1.1.0 — 2026-10-26
 
 The mouse wheel no longer does two things at once.

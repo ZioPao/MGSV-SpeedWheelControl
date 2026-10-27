@@ -27,6 +27,17 @@ const char* const   kUpdateMoveForceByPadPat =
 // Turns Work::moveForce into the motion-graph move-speed rate.
 constexpr uintptr_t kUpdateMoveSpeedRva = 0x10BD010;
 
+// tpp::gm::player::impl::BasicActionImpl::GetMoveForceLimit
+//   rcx = BasicActionImpl*, edx = player index, r8 = Work*  -> float limit
+// Clamps the move force to STICK_FORCE_MIN while the walk-pace flag is set (or
+// while the player is aiming/held). Hooked so the walk key can be turned into a
+// pure speed reset without also walking.
+constexpr uintptr_t kGetMoveForceLimitRva = 0x109F6F0;
+const char* const   kGetMoveForceLimitPat =
+    "40 53 48 83 EC 40 48 8B 41 08 0F 29 74 24 30 F3 0F 10 35 ? ? ? ? "
+    "0F 29 7C 24 20 F3 0F 10 3D ? ? ? ? 49 8B D8 4C 8B 48 78 "
+    "48 8B 81 B8 01 00 00 41 2B 51 08";
+
 // tpp::gm::player::impl::PadImpl::Update
 // Writes the mouse wheel delta into PadImpl +0x48C every frame.
 constexpr uintptr_t kPadUpdateRva = 0x1206A00;
@@ -43,6 +54,15 @@ constexpr uintptr_t kWorkFlags      = 0x2AC;  // uint32
 constexpr uint32_t  kWorkFlagDash   = 0x20;   // dash / sprint active
 constexpr uintptr_t kWorkStance     = 0x2A2;  // byte: 1 = stand, 2 = squat, 3 = crawl
 constexpr uintptr_t kWorkDeltaTime  = 0x2B8;  // float, frame delta seconds
+
+// Second flag word. Bit 0x100 is the walk-pace state (the game's "walk" binding,
+// whatever key it is bound to). UpdateMoveForceByPad writes it every frame from
+// pad button 0x19 (set while the button is down, cleared when it is not), and
+// GetMoveForceLimit (rva 0x109F6F0) clamps the move force to STICK_FORCE_MIN
+// while it is set. The speed wheel uses it as its reset key: no VK polling, so
+// rebinding the walk key in-game is picked up automatically.
+constexpr uintptr_t kWorkFlags2     = 0x2B0;  // uint32
+constexpr uint32_t  kWorkFlagWalk   = 0x00000100;
 
 // ---------------------------------------------------------------------------
 // PadImpl (retail layout, unchanged from the debug build)

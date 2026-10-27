@@ -75,6 +75,7 @@ bool LoadConfig(const std::string& iniPath) {
         else if (!_stricmp(key, "invertWheel"))         g_cfg.invertWheel = ParseBool(val, g_cfg.invertWheel);
         else if (!_stricmp(key, "wheelStep"))           g_cfg.wheelStep = (int)strtol(val, nullptr, 0);
         else if (!_stricmp(key, "defaultLevel"))        g_cfg.defaultLevel = (int)strtol(val, nullptr, 0);
+        else if (!_stricmp(key, "walkKey"))             g_cfg.walkKey = (int)strtol(val, nullptr, 0);
         else if (!_stricmp(key, "levels"))              g_cfg.levels = ParseFloatList(val, g_cfg.levels);
         else if (!_stricmp(key, "smoothSeconds"))       g_cfg.smoothSeconds = (float)atof(val);
         else if (!_stricmp(key, "forceMin"))            g_cfg.forceMin = (float)atof(val);
@@ -92,6 +93,8 @@ bool LoadConfig(const std::string& iniPath) {
 
     if (g_cfg.defaultLevel < 0) g_cfg.defaultLevel = 0;
     if (g_cfg.defaultLevel >= (int)g_cfg.levels.size()) g_cfg.defaultLevel = (int)g_cfg.levels.size() - 1;
+    if (g_cfg.walkKey < 0) g_cfg.walkKey = 0;
+    if (g_cfg.walkKey > 2) g_cfg.walkKey = 2;
     if (g_cfg.smoothSeconds < 0.0f) g_cfg.smoothSeconds = 0.0f;
 
     LogInfo("config loaded: %d keys from %s", applied, iniPath.c_str());
@@ -123,6 +126,7 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
         "invertWheel=0            ; 1 = wheel up slows down\n"
         "wheelStep=1              ; levels moved per wheel notch (1..3)\n"
         "defaultLevel=7           ; index into levels (7 = vanilla run)\n"
+        "walkKey=1                ; walk key: 0 off, 1 reset + no walk, 2 reset + walk\n"
         "\n"
         "; target move-speed rate per notch (0..1), 1.0 = vanilla run\n"
         "levels=0.10,0.23,0.36,0.49,0.62,0.75,0.88,1.00\n"
