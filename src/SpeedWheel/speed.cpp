@@ -29,12 +29,15 @@ namespace {
 
 using PadUpdateFn = void(__fastcall*)(void* self);
 using UpdateMoveForceByPadFn = void(__fastcall*)(void* self, unsigned playerIndex, void* work);
+using GetMoveForceLimitFn = float(__fastcall*)(void* self, unsigned playerIndex, void* work);
 
 PadUpdateFn g_origPadUpdate = nullptr;
 UpdateMoveForceByPadFn g_origMoveForce = nullptr;
+GetMoveForceLimitFn g_origMoveForceLimit = nullptr;
 
 uintptr_t g_padUpdateTarget = 0;
 uintptr_t g_moveForceTarget = 0;
+uintptr_t g_moveForceLimitTarget = 0;
 
 int   g_level = 7;
 float g_targetMul = 1.0f;
@@ -233,6 +236,7 @@ void PollRuntimeFile() {
     int   invert = -1;
     int   step = -1;
     int   idroid = -1;
+    int   walkKey = -1;
     float smooth = -1.0f;
 
     size_t pos = 0;
@@ -262,6 +266,7 @@ void PollRuntimeFile() {
         else if (_stricmp(key, "invert") == 0)  invert = atoi(val);
         else if (_stricmp(key, "step") == 0)    step = atoi(val);
         else if (_stricmp(key, "idroid") == 0)  idroid = atoi(val);
+        else if (_stricmp(key, "walkKey") == 0) walkKey = atoi(val);
     }
 
     if (enabled >= 0) {
@@ -294,6 +299,13 @@ void PollRuntimeFile() {
         }
     }
     if (idroid >= 0) SetIdroidOpen(idroid != 0);
+    if (walkKey >= 0) {
+        const int m = (walkKey > 2) ? 2 : walkKey;
+        if (m != g_cfg.walkKey) {
+            g_cfg.walkKey = m;
+            LogInfo("IH menu: walk key mode %d", m);
+        }
+    }
 }
 
 void CheckHotkeys() {
@@ -422,7 +434,7 @@ void __fastcall UpdateMoveForceByPadHook(void* self, unsigned playerIndex, void*
     if (SafeRead(workAddr + offsets::kWorkFlags2, flags2)) {
         g_lastFlags2 = flags2;
         const bool walk = (flags2 & offsets::kWorkFlagWalk) != 0;
-        if (walk && !g_walkPrev && GameplayInputAllowed()) {
+        if (walk && !g_walkPrev && g_cfg.walkKey != 0 && GameplayInputAllowed()) {
             SetLevel(g_cfg.defaultLevel, "walk key reset");
         }
         g_walkPrev = walk;
@@ -456,8 +468,27 @@ void __fastcall UpdateMoveForceByPadHook(void* self, unsigned playerIndex, void*
     }
 }
 
-uintptr_t FindCodeSection(uintptr_t& sizeOut) {
-    sizeOut = 0;
+// Walk key mode 1 ("reset, no walk"): keep the native walk clamp out of the way.
+// GetMoveForceLimit forces the move force down to STICK_FORCE_MIN while the walk
+// flag is set. Run the original with that flag masked so only the walk reason
+// disappears (aim and status clamps still apply), then restore it, so the reset
+// edge in UpdateMoveForceByPad still sees the real hold state.
+float __fastcall GetMoveForceLimitHook(void* self, unsigned playerIndex, void* work) {
+    if (g_cfg.walkKey == 1 && work) {
+        const uintptr_t workAddr = reinterpret_cast<uintptr_t>(work);
+        unsigned flags2 = 0;
+        if (SafeRead(workAddr + offsets::kWorkFlags2, flags2) &&
+            (flags2 & offsets::kWorkFlagWalk)) {
+            SafeWrite(workAddr + offsets::kWorkFlags2, flags2 & ~offsets::kWorkFlagWalk);
+            const float limit = g_origMoveForceLimit(self, playerIndex, work);
+            SafeWrite(workAddr + offsets::kWorkFlags2, flags2);
+            return limit;
+        }
+    }
+    return g_origMoveForceLimit(self, playerIndex, work);
+}
+
+uintptr_t FindCodeSection(uintptr_t& sizeOut) {    sizeOut = 0;
     if (!g_base) return 0;
     auto dos = reinterpret_cast<IMAGE_DOS_HEADER*>(g_base);
     auto nt = reinterpret_cast<IMAGE_NT_HEADERS64*>(g_base + dos->e_lfanew);
@@ -536,6 +567,12 @@ bool InstallSpeedHook() {
                                       offsets::kUpdateMoveForceByPadPat);
     if (!g_padUpdateTarget || !g_moveForceTarget) return false;
 
+    // Optional: lets the walk key stop walking while it resets the speed. A miss
+    // only costs that behaviour, never the speed wheel itself.
+    g_moveForceLimitTarget = ResolveTarget(codeStart, codeSize, "GetMoveForceLimit",
+                                           offsets::kGetMoveForceLimitRva,
+                                           offsets::kGetMoveForceLimitPat);
+
     // The native camera zoom consumer. A pattern miss only costs the zoom gate,
     // never the speed system itself.
     const uintptr_t zoomHandlerTarget = ResolveTarget(codeStart, codeSize, "ZoomWheelHandler",
@@ -584,6 +621,23 @@ bool InstallSpeedHook() {
         return false;
     }
 
+    if (g_moveForceLimitTarget) {
+        st = MH_CreateHook(reinterpret_cast<LPVOID>(g_moveForceLimitTarget),
+                           reinterpret_cast<LPVOID>(&GetMoveForceLimitHook),
+                           reinterpret_cast<LPVOID*>(&g_origMoveForceLimit));
+        if (st == MH_OK) {
+            st = MH_EnableHook(reinterpret_cast<LPVOID>(g_moveForceLimitTarget));
+        }
+        if (st != MH_OK) {
+            LogWarn("GetMoveForceLimit hook failed (%d) - walking stays native", (int)st);
+            g_moveForceLimitTarget = 0;
+        }
+    }
+    if (!g_moveForceLimitTarget && g_cfg.walkKey == 1) {
+        g_cfg.walkKey = 2;
+        LogWarn("walk key: clamp hook unavailable, falling back to mode 2 (reset + walk)");
+    }
+
     InstallWheelGate(zoomHandlerTarget);
 
     LogInfo("hooked PadImpl::Update @ 0x%llX (wheel +0x%X)",
@@ -593,6 +647,10 @@ bool InstallSpeedHook() {
             g_forceMin, g_forceMax);
     LogInfo("speed levels: %d, default %d, smooth %.2fs, top speed = vanilla run",
             (int)g_cfg.levels.size(), g_level + 1, g_cfg.smoothSeconds);
+    if (g_moveForceLimitTarget) {
+        LogInfo("hooked GetMoveForceLimit @ 0x%llX (walk key mode %d)",
+                (unsigned long long)g_moveForceLimitTarget, g_cfg.walkKey);
+    }
     LogLevel("initial level");
     return true;
 }

@@ -75,6 +75,12 @@ movement input.
 The plugin exposes the flag as the reset input: a rising edge sets the speed
 level back to `defaultLevel`.
 
+`GetMoveForceLimit` is hooked (rva `0x109F6F0`, signature
+`float (this, playerIndex, Work*)`) to implement `walkKey=1`: for that call the
+walk bit is masked in `Work + 0x2B0` and restored afterwards, so the walk clamp
+never reaches the move force while every other clamp (aim, status `0x7a`/`0x7e`,
+stand speed limit) still applies.
+
 ## Wheel ownership
 
 `PadImpl + 0x48C` is one per-frame delta shared by every wheel consumer, so a

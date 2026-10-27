@@ -46,6 +46,7 @@ local function WriteRuntime()
   f:write(string.format("smooth=%.3f\n", IvarValue("sw_smooth", 0.12)))
   f:write("invert=" .. tostring(IvarValue("sw_invert", 0)) .. "\n")
   f:write("step=" .. tostring(IvarValue("sw_wheelStep", 1)) .. "\n")
+  f:write("walkKey=" .. tostring(IvarValue("sw_walkKey", 1)) .. "\n")
   f:write("idroid=" .. tostring(idroidState) .. "\n")
   f:close()
 end
@@ -99,6 +100,7 @@ this.registerIvars = {
   "sw_wheelStep",
   "sw_smooth",
   "sw_invert",
+  "sw_walkKey",
 }
 
 this.sw_enabled = {
@@ -146,6 +148,20 @@ this.sw_invert = {
   OnChange = OnChange,
 }
 
+this.sw_walkKey = {
+  description = "Walk key",
+  inMission = true,
+  save = IvarProc.CATEGORY_EXTERNAL,
+  default = 1,
+  range = { min = 0, max = 2, increment = 1 },
+  OnChange = OnChange,
+  GetSettingText = function(self, setting)
+    if setting == 0 then return "Off (native walk)" end
+    if setting == 1 then return "Reset, no walk" end
+    return "Reset + walk"
+  end,
+}
+
 -- ---------------------------------------------------------------------------
 -- Menu page
 -- ---------------------------------------------------------------------------
@@ -160,6 +176,7 @@ function this.GenerateMenus()
       "Ivars.sw_wheelStep",
       "Ivars.sw_smooth",
       "Ivars.sw_invert",
+      "Ivars.sw_walkKey",
     },
   }
 

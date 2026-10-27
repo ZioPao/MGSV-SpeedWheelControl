@@ -16,6 +16,10 @@ struct Config {
     int   defaultLevel      = 7;      // index into levels (top = vanilla run)
     int   wheelStep         = 1;      // levels moved per wheel notch (1..3)
 
+    // Walk key behaviour (the game's own walk binding, read from Work+0x2B0).
+    // 0 = off (native walk, no reset), 1 = reset speed + no walk, 2 = reset + walk
+    int   walkKey           = 1;
+
     // Each entry is a target move-speed *rate* (0..1) mapped through the game's
     // own force curve. 1.0 = vanilla keyboard run, lower = slower.
     std::vector<float> levels = { 0.10f, 0.23f, 0.36f, 0.49f, 0.62f, 0.75f, 0.88f, 1.00f };
