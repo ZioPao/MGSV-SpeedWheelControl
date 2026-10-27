@@ -1,22 +1,13 @@
 # Changelog
 
-## 1.1.1 — 2026-10-27
+## 1.2.0 — 2026-10-27
 
-The walk key now doubles as the emergency reset.
+The walk key is now your reset key.
 
-- **New:** pressing the walk key resets the speed level to `defaultLevel`
-  (vanilla run unless you changed it). No new ini keys.
-- **New knob:** *Walk key* (F3 → Speed Wheel Control) — `Off (native walk)`,
-  `Reset, no walk` (default), `Reset + walk`. Same as `walkKey=0|1|2` in
-  `SpeedWheel.ini`.
-- `Reset, no walk` masks the walk clamp in `GetMoveForceLimit`
-  (rva `0x109F6F0`) for that frame, so the key becomes a pure reset.
-- The key itself is read from the game, not from a VK: the plugin watches
-  `Work + 0x2B0` bit `0x100`, the flag `UpdateMoveForceByPad` writes from the
-  walk binding, so rebinding the walk key in-game is picked up automatically.
-- F7 (toggle) and F8 (reset) still work as before.
-- Update both files: `plugins/SpeedWheel.dll` and
-  `mod/modules/SpeedWheel_Core.lua` (the knob lives in the IH module).
+- Tap the walk key to snap back to normal running speed. No wheel scrolling.
+- New **Walk key** knob (F3 → *Speed Wheel Control*): `Off`, `Reset, no walk`
+  (default), or `Reset + walk`.
+- Uses whatever key you bound to walk in-game. Nothing to configure.
 
 ## 1.1.0 — 2026-10-26
 
