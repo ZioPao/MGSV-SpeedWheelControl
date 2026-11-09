@@ -2,7 +2,9 @@ param(
     [string]$GameDir   = "C:\Steam\steamapps\common\MGS_TPP",
     [string]$BundleDir = "bundle",
     [switch]$Deploy,
-    [switch]$Zip
+    [switch]$Zip,
+    [switch]$Mgsv,
+    [string]$DmmMods   = $env:DMM_MODS
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,6 +45,65 @@ if ($Zip) {
     if (Test-Path $zip) { Remove-Item $zip -Force }
     Compress-Archive -Path $stage -DestinationPath $zip
     Write-Host "zipped: $zip"
+}
+
+if ($Mgsv) {
+    # DMM / SnakeBite package: a zip with metadata.xml at the root and the game
+    # files under GameDir/. Same layout DMM writes for SpeedWheelControl-v1.2.0.
+    $cmake = Get-Content (Join-Path $root "src\SpeedWheel\CMakeLists.txt") -Raw
+    if ($cmake -notmatch 'project\(SpeedWheel\s+VERSION\s+([0-9]+\.[0-9]+\.[0-9]+)') {
+        throw "could not read the version from src/SpeedWheel/CMakeLists.txt"
+    }
+    $version = $Matches[1]
+    $name = "Speed Wheel Control"
+
+    $dllHash = (Get-FileHash -Algorithm MD5 -Path $dll).Hash
+    $luaHash = (Get-FileHash -Algorithm MD5 -Path $lua).Hash
+    $metadata = @"
+<?xml version="1.0" encoding="utf-8"?>
+<ModEntry xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="$name" Version="$version" Author="ZioPao" Website="https://github.com/ZioPao/MGSV-SpeedWheelControl">
+  <MGSVersion Version="1.0.15.4" />
+  <SBVersion Version="0.9.2.5" />
+  <Description>Dynamic on-foot movement speed for M+KB players, similar to how Splinter Cell did it back in the day.</Description>
+  <QarEntries />
+  <FpkEntries />
+  <FileEntries>
+    <FileEntry FilePath="/mod/modules/SpeedWheel_Core.lua" ContentHash="$luaHash" />
+    <FileEntry FilePath="/plugins/SpeedWheel.dll" ContentHash="$dllHash" />
+  </FileEntries>
+  <WmvEntries />
+</ModEntry>
+"@
+
+    $dist = Join-Path $root "dist"
+    New-Item -ItemType Directory -Force $dist | Out-Null
+    $mgsvPath = Join-Path $dist "SpeedWheelControl.mgsv"
+    if (Test-Path $mgsvPath) { Remove-Item $mgsvPath -Force }
+
+    $metaTmp = Join-Path ([System.IO.Path]::GetTempPath()) "speedwheel_metadata.xml"
+    [System.IO.File]::WriteAllText($metaTmp, $metadata, (New-Object System.Text.UTF8Encoding($false)))
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::Open($mgsvPath, "Create")
+    try {
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $metaTmp, "metadata.xml", "Optimal") | Out-Null
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $lua, "GameDir/mod/modules/SpeedWheel_Core.lua", "Optimal") | Out-Null
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $dll, "GameDir/plugins/SpeedWheel.dll", "Optimal") | Out-Null
+    } finally {
+        $archive.Dispose()
+        Remove-Item $metaTmp -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host "mgsv: $mgsvPath"
+
+    if ($DmmMods) {
+        if (-not (Test-Path $DmmMods)) {
+            throw "DMM Mods folder not found: $DmmMods (pass -DmmMods or set DMM_MODS)"
+        }
+        Copy-Item $mgsvPath (Join-Path $DmmMods "SpeedWheelControl.mgsv") -Force
+        Write-Host "copied to DMM: $DmmMods"
+    } else {
+        Write-Host "DMM_MODS not set; skipping copy to DMM"
+    }
 }
 
 if ($Deploy) {
