@@ -6,7 +6,7 @@ namespace sw {
 
 struct Config {
     bool  enabled           = true;   // master switch (F7 toggles)
-    bool  hotkeyEnabled     = true;   // F7 = toggle, F8 = reset to top speed
+    bool  hotkeyEnabled     = false;  // F7 = toggle, F8 = reset to top speed
     bool  logLevelChanges   = true;   // one line per wheel notch
     bool  logWheel          = true;   // log every raw wheel delta (probe aid)
     bool  logEveryFrame     = false;  // very noisy; for debugging only

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0 — 2026-11-07
+
+- `hotkeyEnabled` now defaults to `0`: F7/F8 are off unless enabled in
+  `SpeedWheel.ini` or the in-game menu.
+
 ## 1.2.0 — 2026-10-27
 
 The walk key is now your reset key.

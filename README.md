@@ -36,7 +36,7 @@ Values here are defaults. Once Infinite Heaven writes `SpeedWheel.runtime`, the 
 | Key | Default | Meaning |
 |---|---|---|
 | `enabled` | `1` | master switch |
-| `hotkeyEnabled` | `1` | F7 = toggle, F8 = reset to top speed |
+| `hotkeyEnabled` | `0` | F7 = toggle, F8 = reset to top speed |
 | `levels` | `0.10,0.23,...,1.00` | target move-speed rate per notch; `1.0` = vanilla run |
 | `defaultLevel` | `7` | index of the starting notch (7 = top speed) |
 | `walkKey` | `2` | walk key: `0` off (native walk), `1` reset + no walk, `2` reset + walk |
