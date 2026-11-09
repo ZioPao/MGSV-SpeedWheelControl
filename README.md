@@ -69,8 +69,9 @@ Output: `build/Release/SpeedWheel.dll` and `lua/SpeedWheel_Core.lua`.
 
 - The wheel is a single shared per-frame delta in `PadImpl+0x48C`. The plugin
   drops notches the game used for zoom: the scope/binocular path is detected by
-  its player status bit, the iDroid map by IH's `inIdroid`. Aiming a weapon keeps
-  the wheel, so speed still changes while moving and aiming.
+  its player status bit, the iDroid map by IH's `inIdroid`, the weapon/item ring
+  by its own open state. Aiming a weapon keeps the wheel, so speed still changes
+  while moving and aiming.
 - The walk key resets to `defaultLevel` (top speed by default). It is not a
   configured hotkey: the game's own walk flag is read every frame, so rebinding
   the key in-game works without touching the ini.

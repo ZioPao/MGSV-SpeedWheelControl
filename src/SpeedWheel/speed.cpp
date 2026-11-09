@@ -578,6 +578,9 @@ bool InstallSpeedHook() {
     const uintptr_t zoomHandlerTarget = ResolveTarget(codeStart, codeSize, "ZoomWheelHandler",
                                                      offsets::kZoomWheelHandlerRva,
                                                      offsets::kZoomWheelHandlerPat);
+    const uintptr_t equipCrossTarget = ResolveTarget(codeStart, codeSize, "EquipCrossEvCall::Update",
+                                                     offsets::kEquipCrossUpdateRva,
+                                                     offsets::kEquipCrossUpdatePat);
 
     ReadForceLimits();
     if (g_cfg.levels.empty()) {
@@ -638,7 +641,7 @@ bool InstallSpeedHook() {
         LogWarn("walk key: clamp hook unavailable, falling back to mode 2 (reset + walk)");
     }
 
-    InstallWheelGate(zoomHandlerTarget);
+    InstallWheelGate(zoomHandlerTarget, equipCrossTarget);
 
     LogInfo("hooked PadImpl::Update @ 0x%llX (wheel +0x%X)",
             (unsigned long long)g_padUpdateTarget, (unsigned)offsets::kPadWheel);
