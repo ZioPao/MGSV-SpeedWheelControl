@@ -116,7 +116,7 @@ void WriteDefaultConfigIfMissing(const std::string& iniPath) {
         "; from vanilla; wheel up returns to normal speed.\n"
         "\n"
         "enabled=1\n"
-        "hotkeyEnabled=1          ; F7 toggle, F8 reset to top speed\n"
+        "hotkeyEnabled=0          ; F7 toggle, F8 reset to top speed\n"
         "\n"
         "logLevelChanges=1\n"
         "logWheel=1               ; raw wheel deltas, useful to verify the input\n"
