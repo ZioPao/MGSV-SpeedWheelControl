@@ -61,7 +61,11 @@ Requires CMake ≥ 3.20 and MSVC (VS 2022/2026, x64). MinHook is a git submodule
 .\build.ps1 -Deploy    # build, then copy the DLL and the IH module into the game
 .\bundle.ps1           # build + assemble bundle/MGS_TPP (plugins/, mod/modules/)
 .\bundle.ps1 -Deploy   # build, assemble the bundle, then copy it into the game
+.\bundle.ps1 -Mgsv     # build + package dist/SpeedWheelControl.mgsv for DMM
 ```
+
+`-Mgsv` also copies the package into DMM's `Mods` folder when `-DmmMods` or
+the `DMM_MODS` environment variable points at it.
 
 Output: `build/Release/SpeedWheel.dll` and `lua/SpeedWheel_Core.lua`.
 
