@@ -1,11 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-11-07
 
+- `hotkeyEnabled` now defaults to `0`: F7/F8 are off unless enabled in
+  `SpeedWheel.ini` or the in-game menu.
 - **Fixed:** scrolling through the weapon/item ring no longer changes your
   speed level ([#4](https://github.com/ZioPao/MGSV-SpeedWheelControl/issues/4)).
-- The log says `weapon/item ring open` when a notch is ignored for it.
-- DLL-only update: `plugins/SpeedWheel.dll`.
 
 ## 1.2.0 — 2026-10-27
 
