@@ -90,6 +90,25 @@ constexpr uintptr_t kZoomWheelHandlerRva = 0xB5D560;
 const char* const   kZoomWheelHandlerPat =
     "40 55 48 8B EC 48 83 EC 60 48 8B 05 C0 BD FE 01";
 
+// tpp::ui::hud::EquipCrossEvCall::Update (virtual, rcx = this)
+// The weapon/item selection ring. It reads the same pad wheel delta through the
+// pad service (no separate field to hook), so it is gated by its open state.
+// Found through EquipCrossEvCall::GetMouseWheelDir (rva 0x8ABAF0, the only
+// function with its direction table): its two callers, ItemDirectionSelect and
+// SupportDirectionSelect, are both called only from this function.
+constexpr uintptr_t kEquipCrossUpdateRva = 0x8B56F0;
+const char* const   kEquipCrossUpdatePat =
+    "40 57 48 83 EC 30 80 B9 C4 02 00 00 00 48 8B F9 75 0A 48 83 C4 30 5F E9 ? ? ? ? "
+    "48 83 B9 10 01 00 00 00 0F 84";
+
+// EquipCrossEvCall state machine (uint32 at +0x2C0):
+//   1 reset, 2 setup, 3 idle (waits for the equip key), 4 opening,
+//   6/7 open (7 runs the wheel/stick selection), 8 equip + set out,
+//   9 closing animation (the key can reopen it), 10 hidden.
+constexpr uintptr_t kEquipCrossState     = 0x2C0;
+constexpr uint32_t  kEquipCrossOpenFirst = 4;
+constexpr uint32_t  kEquipCrossOpenLast  = 9;
+
 // ---------------------------------------------------------------------------
 // Player status bits (tpp::PlayerInfo status table).
 //

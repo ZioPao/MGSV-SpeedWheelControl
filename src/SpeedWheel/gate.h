@@ -10,11 +10,12 @@ enum class WheelGate {
     CameraZoom,   // native camera zoom handler consumed the wheel
     Binoculars,   // PlayerStatus BINOCLE ("using int-scope")
     Idroid,       // Infinite Heaven reports the iDroid map open
+    EquipMenu,    // weapon/item selection ring is open
 };
 
-// Hooks the native camera zoom consumer (0 is a pattern miss) and enables the
-// state gates. Without the hook the state gates still work.
-void InstallWheelGate(uintptr_t zoomHandler);
+// Hooks the native camera zoom consumer and the weapon/item ring update (0 is a
+// pattern miss) and enables the state gates. A missed hook only costs its gate.
+void InstallWheelGate(uintptr_t zoomHandler, uintptr_t equipCrossUpdate);
 
 // Published by the IH module through SpeedWheel.runtime.
 void SetIdroidOpen(bool open);

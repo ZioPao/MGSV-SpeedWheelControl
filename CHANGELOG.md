@@ -4,6 +4,8 @@
 
 - `hotkeyEnabled` now defaults to `0`: F7/F8 are off unless enabled in
   `SpeedWheel.ini` or the in-game menu.
+- **Fixed:** scrolling through the weapon/item ring no longer changes your
+  speed level ([#4](https://github.com/ZioPao/MGSV-SpeedWheelControl/issues/4)).
 
 ## 1.2.0 — 2026-10-27
 

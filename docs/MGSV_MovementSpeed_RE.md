@@ -90,6 +90,8 @@ notch meant for zoom would also move the speed level:
 |---|---|---|
 | Wheel zoom handler | `0xB5D560` | camera/binocular zoom; invoked from `0xB5D750` when the pad wheel flag is set, handles both directions |
 | Pad wheel flags | `+0x564` | `0x80000` = wheel produced a delta, `0x100000` = negative direction |
+| `EquipCrossEvCall::Update` | `0x8B56F0` | weapon/item ring; state at `this + 0x2C0`, gated while it is `4..9` |
+| `EquipCrossEvCall::GetMouseWheelDir` | `0x8ABAF0` | ring direction table; used only to locate `Update` |
 
 `PadImpl::GetWheel` (`0x1205E60`) exists but the game never calls it, so it is
 not hooked.
@@ -97,6 +99,31 @@ not hooked.
 `SpeedWheel` defers each notch by one frame and drops it when the zoom handler
 read the wheel in that frame; the scope/binocular path is additionally gated by
 the player status bit `BINOCLE` (58) and the iDroid map by IH's `inIdroid`.
+
+### Weapon/item ring
+
+`tpp::ui::hud::EquipCrossEvCall` reads the wheel through the pad service
+(the same value `PadImpl::Update` copies to `+0x48C`), so there is no separate
+consumer to hook. It also only takes a notch every 0.4 s, so a "consumed this
+frame" window like the zoom gate would leak the notches in between. The gate
+uses the ring's state machine instead:
+
+```
+EquipCrossEvCall + 0x2C0 (u32)
+  1 reset, 2 setup, 3 idle (waits for the equip key)
+  4 opening, 6/7 open (7 runs ItemDirectionSelect / SupportDirectionSelect)
+  8 equip + set out, 9 closing (the key can reopen), 10 hidden
+```
+
+`Update` is hooked; while the state is `4..9` a timestamp is refreshed and
+notches within 100 ms of it are dropped. The timestamp (not a flag) means an
+unloaded HUD cannot hold the gate closed.
+
+The retail address was found without RTTI (retail has none for this class):
+`GetMouseWheelDir` is the only function that builds its direction table
+(`mov dword [rbp-0x30], 0x01040400`, ...); its two callers are
+`ItemDirectionSelect` / `SupportDirectionSelect`, and both are called only from
+`Update` (`0x8B56F0`, referenced from the class vtable).
 
 ## Player status bits
 
