@@ -1,4 +1,5 @@
 build/
+dist/
 bundle/
 out/
 *.obj
